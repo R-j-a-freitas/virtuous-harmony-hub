@@ -19,7 +19,6 @@ const Hero = () => {
 
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <img src={logo} alt="Virtuous Ensemble" className="h-32 md:h-48 w-auto mx-auto mb-8 animate-fade-in" />
         <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl text-foreground mb-6 animate-fade-in">A Harmonia Perfeita para os Seus Momentos Únicos</h1>
         <p className="text-lg md:text-xl text-muted-foreground mb-8 font-sans animate-fade-in">Música que eleva o seu evento, com a sofisticação e emoção que merece</p>
         <button onClick={scrollToContact} className="bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-sans font-medium hover:bg-primary/90 transition-all hover:scale-105 animate-fade-in">
