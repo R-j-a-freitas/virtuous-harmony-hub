@@ -1,0 +1,42 @@
+import heroImage from "@/assets/hero-image.jpg";
+import logo from "@/assets/logo.jpeg";
+
+const Hero = () => {
+  const scrollToContact = () => {
+    const element = document.getElementById("contact");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  return (
+    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <img src={logo} alt="Virtuous Ensemble" className="h-32 md:h-48 w-auto mx-auto mb-8 animate-fade-in" />
+        <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl text-foreground mb-6 animate-fade-in">
+          Música Elegante para Momentos Inesquecíveis
+        </h1>
+        <p className="text-lg md:text-xl text-muted-foreground mb-8 font-sans animate-fade-in">
+          Música personalizada para casamentos, cerimónias e eventos especiais
+        </p>
+        <button
+          onClick={scrollToContact}
+          className="bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-sans font-medium hover:bg-primary/90 transition-all hover:scale-105 animate-fade-in"
+        >
+          Reserve o Seu Evento
+        </button>
+      </div>
+    </section>
+  );
+};
+
+export default Hero;
