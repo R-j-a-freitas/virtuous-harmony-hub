@@ -1,3 +1,7 @@
+// @ts-nocheck - This file runs in Deno runtime, not Node.js
+// Setup type definitions for built-in Supabase Runtime APIs
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from "https://esm.sh/zod@3.22.4"
