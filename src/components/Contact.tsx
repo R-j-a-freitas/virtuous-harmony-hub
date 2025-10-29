@@ -9,39 +9,24 @@ import { z } from "zod";
 
 // Input validation schema with security constraints
 const contactFormSchema = z.object({
-  name: z.string()
-    .min(2, "Nome deve ter pelo menos 2 caracteres")
-    .max(100, "Nome não pode exceder 100 caracteres")
-    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome deve conter apenas letras e espaços"),
-  email: z.string()
-    .email("Email inválido")
-    .max(255, "Email não pode exceder 255 caracteres"),
-  phone: z.string()
-    .min(9, "Telemóvel deve ter pelo menos 9 dígitos")
-    .max(20, "Telemóvel não pode exceder 20 caracteres")
-    .regex(/^[\+]?[0-9\s\-\(\)]+$/, "Formato de telemóvel inválido"),
-  date: z.string()
-    .min(1, "Data é obrigatória")
-    .refine((date) => {
-      const selectedDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return selectedDate >= today;
-    }, "Data deve ser hoje ou no futuro"),
-  location: z.string()
-    .min(3, "Local deve ter pelo menos 3 caracteres")
-    .max(200, "Local não pode exceder 200 caracteres"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome não pode exceder 100 caracteres").regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome deve conter apenas letras e espaços"),
+  email: z.string().email("Email inválido").max(255, "Email não pode exceder 255 caracteres"),
+  phone: z.string().min(9, "Telemóvel deve ter pelo menos 9 dígitos").max(20, "Telemóvel não pode exceder 20 caracteres").regex(/^[\+]?[0-9\s\-\(\)]+$/, "Formato de telemóvel inválido"),
+  date: z.string().min(1, "Data é obrigatória").refine(date => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+  }, "Data deve ser hoje ou no futuro"),
+  location: z.string().min(3, "Local deve ter pelo menos 3 caracteres").max(200, "Local não pode exceder 200 caracteres"),
   time: z.string().optional(),
-  message: z.string()
-    .max(2000, "Mensagem não pode exceder 2000 caracteres")
-    .optional()
-    .default(""),
+  message: z.string().max(2000, "Mensagem não pode exceder 2000 caracteres").optional().default("")
 });
-
 type ContactFormData = z.infer<typeof contactFormSchema>;
-
 const Contact = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
@@ -49,31 +34,31 @@ const Contact = () => {
     date: "",
     location: "",
     time: "",
-    message: "",
+    message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
+    const {
+      name,
+      value
+    } = e.target;
+
     // Sanitize input to prevent XSS
     const sanitizedValue = value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    
     setFormData(prev => ({
       ...prev,
-      [name]: sanitizedValue,
+      [name]: sanitizedValue
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
-        [name]: "",
+        [name]: ""
       }));
     }
   };
-
   const validateForm = (): boolean => {
     try {
       contactFormSchema.parse(formData);
@@ -82,7 +67,7 @@ const Contact = () => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
+        error.errors.forEach(err => {
           if (err.path[0]) {
             newErrors[err.path[0] as string] = err.message;
           }
@@ -92,7 +77,6 @@ const Contact = () => {
       return false;
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -102,32 +86,32 @@ const Contact = () => {
       toast({
         title: "Erro de Validação",
         description: "Por favor, corrija os erros no formulário",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsSubmitting(false);
       return;
     }
-
     try {
-    // Save to database with validated data
-    const { error: dbError } = await supabase.from("events").insert({
-      title: `Evento - ${formData.name}`,
-      event_date: formData.date,
-      event_time: formData.time || null,
-      location: formData.location,
-      description: formData.message || null,
-      client_name: formData.name,
-      client_email: formData.email,
-      client_phone: formData.phone,
-      status: "pending",
-    });
-
+      // Save to database with validated data
+      const {
+        error: dbError
+      } = await supabase.from("events").insert({
+        title: `Evento - ${formData.name}`,
+        event_date: formData.date,
+        event_time: formData.time || null,
+        location: formData.location,
+        description: formData.message || null,
+        client_name: formData.name,
+        client_email: formData.email,
+        client_phone: formData.phone,
+        status: "pending"
+      });
       if (dbError) {
         console.error("Database error:", dbError);
         toast({
           title: "Erro",
           description: "Ocorreu um erro ao guardar os dados. Tente novamente.",
-          variant: "destructive",
+          variant: "destructive"
         });
         setIsSubmitting(false);
         return;
@@ -136,17 +120,19 @@ const Contact = () => {
       // Call edge function to send email
       let emailSent = false;
       let errorMessage = "";
-      
       try {
         console.log("📧 Attempting to send email via edge function 'resend-email'...");
         console.log("📧 Form data:", formData);
-        
-        const { data, error: emailError } = await supabase.functions.invoke("resend-email", {
-          body: formData,
+        const {
+          data,
+          error: emailError
+        } = await supabase.functions.invoke("resend-email", {
+          body: formData
         });
-
-        console.log("📧 Response received:", { data, error: emailError });
-
+        console.log("📧 Response received:", {
+          data,
+          error: emailError
+        });
         if (emailError) {
           console.error("❌ Supabase function error:", emailError);
           console.error("❌ Error type:", typeof emailError);
@@ -180,7 +166,7 @@ const Contact = () => {
         console.error("❌ Error message:", err?.message);
         console.error("❌ Error stack:", err?.stack);
         console.error("❌ Full error:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
-        
+
         // Check for specific error types
         if (err?.message?.includes('not found') || err?.message?.includes('404')) {
           errorMessage = "Edge function 'resend-email' não encontrada (404). Verifique se está deployada no Supabase.";
@@ -198,13 +184,13 @@ const Contact = () => {
       if (emailSent) {
         toast({
           title: "✅ Sucesso!",
-          description: "A sua mensagem foi enviada. Entraremos em contacto em breve!",
+          description: "A sua mensagem foi enviada. Entraremos em contacto em breve!"
         });
       } else {
         toast({
           title: "⚠️ Formulário Enviado",
           description: `Os seus dados foram guardados. Erro ao enviar email: ${errorMessage || "Erro desconhecido"}. Verifique o console (F12) ou contacte-nos em virtuousensemble@gmail.com`,
-          variant: "destructive",
+          variant: "destructive"
         });
       }
 
@@ -216,7 +202,7 @@ const Contact = () => {
         date: "",
         location: "",
         time: "",
-        message: "",
+        message: ""
       });
       setErrors({});
     } catch (error) {
@@ -224,18 +210,16 @@ const Contact = () => {
       toast({
         title: "Erro",
         description: "Ocorreu um erro inesperado. Tente novamente.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <section id="contact" className="py-20 md:py-32 bg-card">
+  return <section id="contact" className="py-20 md:py-32 bg-card">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="font-serif text-4xl md:text-5xl text-foreground mb-6">
+          <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
             Contacte-nos
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">
@@ -248,128 +232,58 @@ const Contact = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-foreground mb-2 font-sans">Nome *</label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="O seu nome"
-                  required
-                  maxLength={100}
-                  className={errors.name ? "border-red-500" : ""}
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-                )}
+                <Input name="name" value={formData.name} onChange={handleChange} placeholder="O seu nome" required maxLength={100} className={errors.name ? "border-red-500" : ""} />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
               <div>
                 <label className="block text-foreground mb-2 font-sans">Email *</label>
-                <Input
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="email@exemplo.com"
-                  required
-                  maxLength={255}
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                )}
+                <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@exemplo.com" required maxLength={255} className={errors.email ? "border-red-500" : ""} />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-foreground mb-2 font-sans">Telemóvel *</label>
-                <Input
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+351 ..."
-                  required
-                  maxLength={20}
-                  className={errors.phone ? "border-red-500" : ""}
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                )}
+                <Input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+351 ..." required maxLength={20} className={errors.phone ? "border-red-500" : ""} />
+                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </div>
               <div>
                 <label className="block text-foreground mb-2 font-sans">Data da Cerimónia *</label>
-                <Input
-                  name="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  required
-                  min={new Date().toISOString().split('T')[0]}
-                  className={errors.date ? "border-red-500" : ""}
-                />
-                {errors.date && (
-                  <p className="text-red-500 text-sm mt-1">{errors.date}</p>
-                )}
+                <Input name="date" type="date" value={formData.date} onChange={handleChange} required min={new Date().toISOString().split('T')[0]} className={errors.date ? "border-red-500" : ""} />
+                {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-foreground mb-2 font-sans">Local *</label>
-                <Input
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Local do evento"
-                  required
-                  maxLength={200}
-                  className={errors.location ? "border-red-500" : ""}
-                />
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1">{errors.location}</p>
-                )}
+                <Input name="location" value={formData.location} onChange={handleChange} placeholder="Local do evento" required maxLength={200} className={errors.location ? "border-red-500" : ""} />
+                {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
               </div>
               <div>
-                <TimePicker
-                  value={formData.time}
-                  onChange={(value) => setFormData(prev => ({ ...prev, time: value }))}
-                  label="Hora"
-                  placeholder="Selecione a hora do evento"
-                />
+                <TimePicker value={formData.time} onChange={value => setFormData(prev => ({
+                ...prev,
+                time: value
+              }))} label="Hora" placeholder="Selecione a hora do evento" />
               </div>
             </div>
 
             <div>
               <label className="block text-foreground mb-2 font-sans">Mensagem</label>
-              <Textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                placeholder="Conte-nos mais sobre o seu evento..."
-                rows={6}
-                maxLength={2000}
-                className={errors.message ? "border-red-500" : ""}
-              />
-              {errors.message && (
-                <p className="text-red-500 text-sm mt-1">{errors.message}</p>
-              )}
+              <Textarea name="message" value={formData.message} onChange={handleChange} placeholder="Conte-nos mais sobre o seu evento..." rows={6} maxLength={2000} className={errors.message ? "border-red-500" : ""} />
+              {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
               <p className="text-sm text-muted-foreground mt-1">
                 {formData.message.length}/2000 caracteres
               </p>
             </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-            >
+            <Button type="submit" disabled={isSubmitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
               {isSubmitting ? "A enviar..." : "Enviar Pedido"}
             </Button>
           </form>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Contact;

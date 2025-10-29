@@ -1,9 +1,7 @@
 import { Facebook, Instagram, Youtube } from "lucide-react";
 import logo from "@/assets/logo.jpeg";
-
 const Footer = () => {
-  return (
-    <footer className="bg-background border-t border-border py-12">
+  return <footer className="bg-background border-t border-border py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Logo and Description */}
@@ -16,7 +14,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-serif text-lg text-foreground mb-4">Links Rápidos</h3>
+            <h3 className="font-serif text-foreground mb-4 text-3xl">Links Rápidos</h3>
             <ul className="space-y-2">
               <li>
                 <a href="#about" className="text-muted-foreground hover:text-primary transition-colors font-sans">
@@ -48,30 +46,15 @@ const Footer = () => {
 
           {/* Social Media */}
           <div>
-            <h3 className="font-serif text-lg text-foreground mb-4">Redes Sociais</h3>
+            <h3 className="font-serif mb-4 text-3xl text-white">Redes Sociais</h3>
             <div className="flex gap-4">
-              <a
-                href="https://www.instagram.com/virtuousensemble?igsh=cXhpbnpvMXh4b2p4"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors"
-              >
+              <a href="https://www.instagram.com/virtuousensemble?igsh=cXhpbnpvMXh4b2p4" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors">
                 <Instagram className="w-5 h-5 text-foreground" />
               </a>
-              <a
-                href="https://www.facebook.com/share/1AhZcSBF5B/?mibextid=wwXIfr"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors"
-              >
+              <a href="https://www.facebook.com/share/1AhZcSBF5B/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors">
                 <Facebook className="w-5 h-5 text-foreground" />
               </a>
-              <a
-                href="https://www.youtube.com/@VirtuousEnsemble"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors"
-              >
+              <a href="https://www.youtube.com/@VirtuousEnsemble" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors">
                 <Youtube className="w-5 h-5 text-foreground" />
               </a>
             </div>
@@ -84,8 +67,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;

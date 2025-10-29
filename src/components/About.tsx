@@ -29,7 +29,7 @@ const About = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
           {features.map((feature, index) => <div key={index} className="text-center p-6 rounded-lg bg-background border border-border hover:border-primary transition-all hover:scale-105">
               <feature.icon className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="font-serif text-foreground mb-2 text-4xl">{feature.title}</h3>
+              <h3 className="font-serif mb-2 text-4xl text-[#e6c068]">{feature.title}</h3>
               <p className="text-muted-foreground font-sans">{feature.description}</p>
             </div>)}
         </div>
