@@ -23,7 +23,9 @@ import {
   Save,
   X,
   LogOut,
-  Lock
+  Lock,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,6 +37,13 @@ const AdminPanel = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [showAddEventForm, setShowAddEventForm] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [newGalleryImage, setNewGalleryImage] = useState({
+    title: "",
+    description: "",
+    alt_text: "",
+    display_order: 0
+  });
   const queryClient = useQueryClient();
 
   // Verificar autenticação ao carregar
@@ -126,6 +135,25 @@ const AdminPanel = () => {
     },
     enabled: isAuthenticated,
     refetchInterval: 5000, // Refetch every 5 seconds
+  });
+
+  // Buscar imagens da galeria
+  const { data: galleryImages = [], isLoading: galleryLoading } = useQuery({
+    queryKey: ["admin-gallery-images"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gallery_images")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching gallery images:", error);
+        throw error;
+      }
+      return data || [];
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 5000,
   });
 
   // Mutation para atualizar status do evento
@@ -225,6 +253,53 @@ const AdminPanel = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-testimonials"] });
       queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+    },
+  });
+
+  // Mutation para toggle de visibilidade de imagem
+  const toggleGalleryImageVisibility = useMutation({
+    mutationFn: async ({ imageId, isVisible }: { imageId: string; isVisible: boolean }) => {
+      const { error } = await supabase
+        .from("gallery_images")
+        .update({ is_visible: isVisible })
+        .eq("id", imageId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-gallery-images"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery-images"] });
+    },
+  });
+
+  // Mutation para deletar imagem da galeria
+  const deleteGalleryImage = useMutation({
+    mutationFn: async ({ imageId, imageUrl }: { imageId: string; imageUrl: string }) => {
+      // Extrair o path do storage da URL
+      const pathMatch = imageUrl.match(/gallery-images\/(.+)$/);
+      if (pathMatch) {
+        const filePath = pathMatch[1];
+        // Deletar do storage
+        const { error: storageError } = await supabase.storage
+          .from("gallery-images")
+          .remove([filePath]);
+        
+        if (storageError) {
+          console.error("Error deleting from storage:", storageError);
+        }
+      }
+
+      // Deletar do banco de dados
+      const { error } = await supabase
+        .from("gallery_images")
+        .delete()
+        .eq("id", imageId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-gallery-images"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery-images"] });
     },
   });
 
@@ -400,7 +475,7 @@ const AdminPanel = () => {
     try {
       await deleteTestimonial.mutateAsync(testimonialId);
       toast({
-        title: "Testemunho excluído", 
+        title: "Testemunho excluído",
         description: "Testemunho removido com sucesso",
       });
     } catch (error: any) {
@@ -408,6 +483,134 @@ const AdminPanel = () => {
       toast({
         title: "Erro",
         description: error.message || "Falha ao excluir testemunho",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione uma imagem válida",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Upload para o storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from("gallery-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from("gallery-images")
+        .getPublicUrl(filePath);
+
+      // Inserir no banco de dados
+      const { error: dbError } = await supabase
+        .from("gallery_images")
+        .insert({
+          image_url: publicUrl,
+          title: newGalleryImage.title || null,
+          description: newGalleryImage.description || null,
+          alt_text: newGalleryImage.alt_text || null,
+          display_order: newGalleryImage.display_order,
+          is_visible: true
+        });
+
+      if (dbError) throw dbError;
+
+      // Limpar formulário
+      setNewGalleryImage({
+        title: "",
+        description: "",
+        alt_text: "",
+        display_order: 0
+      });
+      
+      // Limpar input
+      e.target.value = "";
+
+      queryClient.invalidateQueries({ queryKey: ["admin-gallery-images"] });
+      queryClient.invalidateQueries({ queryKey: ["gallery-images"] });
+
+      toast({
+        title: "Sucesso",
+        description: "Imagem adicionada à galeria!",
+      });
+    } catch (error: any) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao carregar imagem",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleToggleImageVisibility = async (imageId: string, currentVisibility: boolean) => {
+    try {
+      await toggleGalleryImageVisibility.mutateAsync({
+        imageId,
+        isVisible: !currentVisibility
+      });
+      toast({
+        title: "Visibilidade atualizada",
+        description: `Imagem ${!currentVisibility ? "visível" : "oculta"} no site`,
+      });
+    } catch (error: any) {
+      console.error("Error toggling image visibility:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao atualizar visibilidade",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteGalleryImage = async (imageId: string, imageUrl: string) => {
+    if (!window.confirm("Tem certeza que deseja excluir esta imagem?")) {
+      return;
+    }
+
+    try {
+      await deleteGalleryImage.mutateAsync({ imageId, imageUrl });
+      toast({
+        title: "Imagem excluída",
+        description: "Imagem removida da galeria",
+      });
+    } catch (error: any) {
+      console.error("Error deleting image:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao excluir imagem",
         variant: "destructive"
       });
     }
@@ -500,9 +703,10 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="events" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="events">Eventos</TabsTrigger>
             <TabsTrigger value="testimonials">Testemunhos</TabsTrigger>
+            <TabsTrigger value="gallery">Galeria</TabsTrigger>
           </TabsList>
 
           {/* Aba de Eventos */}
@@ -801,6 +1005,163 @@ const AdminPanel = () => {
                     </CardContent>
                   </Card>
                 ))
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Aba de Galeria */}
+          <TabsContent value="gallery" className="space-y-6">
+            {/* Formulário de Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5" />
+                  Adicionar Nova Imagem
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="image-title">Título (opcional)</Label>
+                    <Input
+                      id="image-title"
+                      value={newGalleryImage.title}
+                      onChange={(e) => setNewGalleryImage({ ...newGalleryImage, title: e.target.value })}
+                      placeholder="Ex: Casamento elegante"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="image-alt">Texto Alternativo (opcional)</Label>
+                    <Input
+                      id="image-alt"
+                      value={newGalleryImage.alt_text}
+                      onChange={(e) => setNewGalleryImage({ ...newGalleryImage, alt_text: e.target.value })}
+                      placeholder="Descrição para acessibilidade"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="image-description">Descrição (opcional)</Label>
+                  <Textarea
+                    id="image-description"
+                    value={newGalleryImage.description}
+                    onChange={(e) => setNewGalleryImage({ ...newGalleryImage, description: e.target.value })}
+                    placeholder="Descrição da imagem..."
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image-order">Ordem de Exibição</Label>
+                  <Input
+                    id="image-order"
+                    type="number"
+                    value={newGalleryImage.display_order}
+                    onChange={(e) => setNewGalleryImage({ ...newGalleryImage, display_order: parseInt(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Números menores aparecem primeiro
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="image-file">Selecionar Imagem</Label>
+                  <Input
+                    id="image-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Formatos aceites: JPG, PNG, WEBP (máximo 5MB)
+                  </p>
+                </div>
+                {uploadingImage && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">Carregando imagem...</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Lista de Imagens */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Imagens da Galeria ({galleryImages.length})
+              </h3>
+
+              {galleryLoading ? (
+                <p className="text-center py-8 text-muted-foreground">Carregando imagens...</p>
+              ) : galleryImages.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center text-muted-foreground">
+                    Nenhuma imagem na galeria. Adicione a primeira imagem acima!
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {galleryImages.map((image: any) => (
+                    <Card key={image.id}>
+                      <CardContent className="p-4">
+                        <div className="aspect-video rounded-lg overflow-hidden mb-3">
+                          <img 
+                            src={image.image_url} 
+                            alt={image.alt_text || image.title || "Imagem da galeria"}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2 mb-3">
+                          {image.title && (
+                            <h4 className="font-semibold text-sm">{image.title}</h4>
+                          )}
+                          {image.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {image.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>Ordem: {image.display_order}</span>
+                            <Badge variant={image.is_visible ? "default" : "secondary"} className="text-xs">
+                              {image.is_visible ? "Visível" : "Oculto"}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={image.is_visible ? "outline" : "default"}
+                            onClick={() => handleToggleImageVisibility(image.id, image.is_visible)}
+                            disabled={toggleGalleryImageVisibility.isPending}
+                            className="flex-1"
+                          >
+                            {image.is_visible ? (
+                              <>
+                                <EyeOff className="mr-1 h-3 w-3" />
+                                Ocultar
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="mr-1 h-3 w-3" />
+                                Mostrar
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteGalleryImage(image.id, image.image_url)}
+                            disabled={deleteGalleryImage.isPending}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
           </TabsContent>
