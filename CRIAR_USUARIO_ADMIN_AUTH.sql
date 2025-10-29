@@ -75,3 +75,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 2. Execute: SELECT public.create_admin_by_email('virtuousensemble@gmail.com');
 -- 3. Verifique: SELECT * FROM public.user_roles WHERE role = 'admin';
 -- ============================================================================
+

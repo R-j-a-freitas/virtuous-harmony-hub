@@ -150,3 +150,4 @@ Se tiver problemas, verifique:
 1. Guia completo: `GUIA_CORRECAO_SEGURANCA.md`
 2. Scripts SQL: `CRIAR_SISTEMA_SEGURANCA_COMPLETO.sql`
 
+

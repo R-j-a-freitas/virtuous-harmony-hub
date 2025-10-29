@@ -65,3 +65,4 @@ Isso diz ao Vercel: "Para qualquer rota (`/(.*)`), retorne o `index.html`", perm
 
 Após fazer o commit e push, o Vercel fará **deploy automático**. Aguarde alguns segundos e teste novamente `/admin`.
 
+

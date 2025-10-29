@@ -95,3 +95,4 @@ CREATE TABLE...
 3. Veja se começa com `--` ou `#`
 4. Se começar com `#`, está no arquivo errado!
 
+

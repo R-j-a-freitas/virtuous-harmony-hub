@@ -156,3 +156,4 @@ Após implementar, verifique:
 
 **Status:** 🔒 **SEGURO PARA PRODUÇÃO** (após executar os scripts SQL)
 
+

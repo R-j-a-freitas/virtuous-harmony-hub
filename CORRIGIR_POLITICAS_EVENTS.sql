@@ -22,3 +22,4 @@ BEGIN
   RAISE NOTICE 'Agora pode executar CRIAR_SISTEMA_SEGURANCA_COMPLETO.sql novamente';
 END $$;
 
+

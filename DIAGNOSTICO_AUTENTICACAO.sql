@@ -73,3 +73,4 @@ WHERE schemaname = 'public' AND tablename = 'user_roles';
 -- SOLUÇÃO: Execute ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 
+

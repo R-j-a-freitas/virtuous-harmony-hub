@@ -129,3 +129,4 @@ Ambas as plataformas (Vercel e Netlify) fazem **deploy automático** sempre que 
 
 **Não precisa fazer nada manual!** 🎉
 
+

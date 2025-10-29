@@ -8,7 +8,7 @@ const Gallery = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gallery_images")
-        .select("*")
+        .select("id, image_url, title, description, alt_text, display_order, is_visible, created_at, updated_at")
         .eq("is_visible", true)
         .order("display_order", { ascending: true });
 
@@ -46,7 +46,13 @@ const Gallery = () => {
                 <img 
                   src={image.image_url} 
                   alt={image.alt_text || image.title || "Imagem da galeria"} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  onError={(e) => {
+                    console.error("Erro ao carregar imagem:", image.image_url, e);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {image.title && (

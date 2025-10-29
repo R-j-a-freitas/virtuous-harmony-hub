@@ -27,6 +27,7 @@ import {
   Upload,
   Image as ImageIcon
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,8 @@ const AdminPanel = () => {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [showAddEventForm, setShowAddEventForm] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newGalleryImage, setNewGalleryImage] = useState({
     title: "",
     description: "",
@@ -200,7 +203,7 @@ const AdminPanel = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gallery_images")
-        .select("*")
+        .select("id, image_url, title, alt_text, display_order, is_visible, created_at, updated_at, description")
         .order("display_order", { ascending: true });
 
       if (error) {
@@ -590,9 +593,12 @@ const AdminPanel = () => {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
 
     // Validar tipo de arquivo
     if (!file.type.startsWith("image/")) {
@@ -601,6 +607,8 @@ const AdminPanel = () => {
         description: "Por favor, selecione uma imagem válida",
         variant: "destructive"
       });
+      e.target.value = "";
+      setSelectedFile(null);
       return;
     }
 
@@ -611,41 +619,110 @@ const AdminPanel = () => {
         description: "A imagem deve ter no máximo 5MB",
         variant: "destructive"
       });
+      e.target.value = "";
+      setSelectedFile(null);
       return;
     }
 
+    setSelectedFile(file);
+    setUploadProgress(0);
+  };
+
+  const handleStartUpload = async () => {
+    if (!selectedFile) return;
+
     setUploadingImage(true);
+    setUploadProgress(0);
 
     try {
+      // Simular progresso inicial (0-30%)
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev < 30) return prev + 2;
+          if (prev < 60) return prev + 1;
+          if (prev < 90) return prev + 0.5;
+          return prev;
+        });
+      }, 50);
+
       // Upload para o storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = fileName;
 
-      const { error: uploadError } = await supabase.storage
-        .from("gallery-images")
-        .upload(filePath, file);
+      // Atualizar progresso para 50% durante upload
+      setUploadProgress(50);
 
-      if (uploadError) throw uploadError;
+      // Fazer upload para o storage com opções explícitas
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("gallery-images")
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: false // Não substituir se já existir
+        });
+
+      clearInterval(progressInterval);
+
+      if (uploadError) {
+        console.error("Erro no upload para storage:", uploadError);
+        throw new Error(`Falha ao fazer upload: ${uploadError.message}`);
+      }
+
+      // Verificar se o upload foi bem-sucedido
+      if (!uploadData) {
+        throw new Error("Upload falhou - nenhum dado retornado");
+      }
+
+      console.log("Upload bem-sucedido:", uploadData);
+
+      // Atualizar progresso para 70%
+      setUploadProgress(70);
 
       // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from("gallery-images")
         .getPublicUrl(filePath);
 
-      // Inserir no banco de dados
+      // Verificar se a URL foi gerada corretamente
+      if (!publicUrl) {
+        throw new Error("Falha ao gerar URL pública");
+      }
+
+      console.log("URL pública gerada:", publicUrl);
+
+      // Atualizar progresso para 85%
+      setUploadProgress(85);
+
+      // Inserir no banco de dados com TODOS os dados necessários
+      const insertData: any = {
+        image_url: publicUrl,
+        filename: fileName, // Nome único gerado
+        original_name: selectedFile.name, // Nome original do ficheiro selecionado pelo utilizador
+        file_path: filePath, // Caminho do ficheiro (igual ao filename)
+        file_size: selectedFile.size, // Tamanho do ficheiro em bytes
+        mime_type: selectedFile.type, // Tipo MIME do ficheiro
+        title: newGalleryImage.title || null,
+        alt_text: newGalleryImage.alt_text || null,
+        display_order: newGalleryImage.display_order,
+        is_visible: true
+      };
+      
+      // Adicionar description apenas se não estiver vazio
+      if (newGalleryImage.description && newGalleryImage.description.trim()) {
+        insertData.description = newGalleryImage.description.trim();
+      }
+      
       const { error: dbError } = await supabase
         .from("gallery_images")
-        .insert({
-          image_url: publicUrl,
-          title: newGalleryImage.title || null,
-          description: newGalleryImage.description || null,
-          alt_text: newGalleryImage.alt_text || null,
-          display_order: newGalleryImage.display_order,
-          is_visible: true
-        });
+        .insert(insertData);
 
       if (dbError) throw dbError;
+
+      // Completar progresso
+      setUploadProgress(100);
+
+      // Pequeno delay para mostrar 100%
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Limpar formulário
       setNewGalleryImage({
@@ -655,8 +732,10 @@ const AdminPanel = () => {
         display_order: 0
       });
       
-      // Limpar input
-      e.target.value = "";
+      // Limpar ficheiro selecionado e input
+      setSelectedFile(null);
+      const fileInput = document.getElementById("image-file") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
 
       queryClient.invalidateQueries({ queryKey: ["admin-gallery-images"] });
       queryClient.invalidateQueries({ queryKey: ["gallery-images"] });
@@ -674,6 +753,8 @@ const AdminPanel = () => {
       });
     } finally {
       setUploadingImage(false);
+      // Pequeno delay antes de resetar progresso
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -1171,16 +1252,41 @@ const AdminPanel = () => {
                     id="image-file"
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={handleFileSelect}
                     disabled={uploadingImage}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
                     Formatos aceites: JPG, PNG, WEBP (máximo 5MB)
                   </p>
+                  {selectedFile && (
+                    <div className="mt-2 p-2 bg-muted rounded-md">
+                      <p className="text-sm font-medium">
+                        Ficheiro selecionado: <span className="text-primary">{selectedFile.name}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  )}
                 </div>
+                {selectedFile && !uploadingImage && (
+                  <Button
+                    type="button"
+                    onClick={handleStartUpload}
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Carregar Imagem
+                  </Button>
+                )}
                 {uploadingImage && (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground">Carregando imagem...</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">A carregar imagem...</span>
+                      <span className="font-medium">{Math.round(uploadProgress)}%</span>
+                    </div>
+                    <Progress value={uploadProgress} className="h-2" />
                   </div>
                 )}
               </CardContent>
@@ -1206,11 +1312,21 @@ const AdminPanel = () => {
                   {galleryImages.map((image: any) => (
                     <Card key={image.id}>
                       <CardContent className="p-4">
-                        <div className="aspect-video rounded-lg overflow-hidden mb-3">
+                        <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-muted flex items-center justify-center">
                           <img 
                             src={image.image_url} 
                             alt={image.alt_text || image.title || "Imagem da galeria"}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error("Erro ao carregar imagem no admin:", image.image_url, e);
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = '<p class="text-xs text-muted-foreground text-center p-4">Erro ao carregar imagem</p>';
+                              }
+                            }}
+                            loading="lazy"
                           />
                         </div>
                         
