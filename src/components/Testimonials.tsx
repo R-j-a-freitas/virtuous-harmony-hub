@@ -6,6 +6,23 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+// Input validation schema for testimonials
+const testimonialSchema = z.object({
+  name: z.string()
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(100, "Nome não pode exceder 100 caracteres")
+    .regex(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome deve conter apenas letras e espaços"),
+  content: z.string()
+    .min(10, "Testemunho deve ter pelo menos 10 caracteres")
+    .max(1000, "Testemunho não pode exceder 1000 caracteres"),
+  rating: z.number()
+    .min(1, "Avaliação deve ser pelo menos 1 estrela")
+    .max(5, "Avaliação não pode exceder 5 estrelas"),
+});
+
+type TestimonialFormData = z.infer<typeof testimonialSchema>;
 
 const Testimonials = () => {
   const { toast } = useToast();
@@ -13,6 +30,8 @@ const Testimonials = () => {
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(5);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: testimonials, refetch } = useQuery({
     queryKey: ["testimonials"],
@@ -29,43 +48,84 @@ const Testimonials = () => {
     },
   });
 
+  const validateForm = (): boolean => {
+    try {
+      testimonialSchema.parse({ name, content, rating });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    if (!name.trim() || !content.trim()) {
+    // Validate form data
+    if (!validateForm()) {
       toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos",
+        title: "Erro de Validação",
+        description: "Por favor, corrija os erros no formulário",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
-    const { error } = await supabase.from("testimonials").insert({
-      name: name.trim(),
-      content: content.trim(),
-      rating,
-    });
+    try {
+      // Sanitize inputs to prevent XSS
+      const sanitizedName = name.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+      const sanitizedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
-    if (error) {
+      const { error } = await supabase.from("testimonials").insert({
+        name: sanitizedName.trim(),
+        content: sanitizedContent.trim(),
+        rating,
+        approved: false, // Sempre começa como não aprovado
+      });
+
+      if (error) {
+        console.error("Database error:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao enviar o testemunho. Tente novamente.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "O seu testemunho foi enviado e será analisado em breve",
+      });
+
+      setName("");
+      setContent("");
+      setRating(5);
+      setErrors({});
+      setIsFormOpen(false);
+      refetch();
+    } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao enviar o testemunho",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast({
-      title: "Sucesso!",
-      description: "O seu testemunho foi enviado e será analisado em breve",
-    });
-
-    setName("");
-    setContent("");
-    setRating(5);
-    setIsFormOpen(false);
-    refetch();
   };
 
   return (
@@ -90,32 +150,54 @@ const Testimonials = () => {
           <div className="max-w-2xl mx-auto mb-16 bg-card border border-border rounded-lg p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-foreground mb-2 font-sans">Nome</label>
+                <label className="block text-foreground mb-2 font-sans">Nome *</label>
                 <Input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (errors.name) setErrors(prev => ({ ...prev, name: "" }));
+                  }}
                   placeholder="O seu nome"
-                  className="w-full"
+                  className={`w-full ${errors.name ? "border-red-500" : ""}`}
+                  maxLength={100}
+                  required
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                )}
               </div>
               <div>
-                <label className="block text-foreground mb-2 font-sans">Testemunho</label>
+                <label className="block text-foreground mb-2 font-sans">Testemunho *</label>
                 <Textarea
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if (errors.content) setErrors(prev => ({ ...prev, content: "" }));
+                  }}
                   placeholder="Partilhe a sua experiência..."
                   rows={4}
-                  className="w-full"
+                  className={`w-full ${errors.content ? "border-red-500" : ""}`}
+                  maxLength={1000}
+                  required
                 />
+                {errors.content && (
+                  <p className="text-red-500 text-sm mt-1">{errors.content}</p>
+                )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  {content.length}/1000 caracteres
+                </p>
               </div>
               <div>
-                <label className="block text-foreground mb-2 font-sans">Avaliação</label>
+                <label className="block text-foreground mb-2 font-sans">Avaliação *</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
-                      onClick={() => setRating(star)}
+                      onClick={() => {
+                        setRating(star);
+                        if (errors.rating) setErrors(prev => ({ ...prev, rating: "" }));
+                      }}
                       className="focus:outline-none"
                     >
                       <Star
@@ -126,9 +208,16 @@ const Testimonials = () => {
                     </button>
                   ))}
                 </div>
+                {errors.rating && (
+                  <p className="text-red-500 text-sm mt-1">{errors.rating}</p>
+                )}
               </div>
-              <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Enviar Testemunho
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {isSubmitting ? "A enviar..." : "Enviar Testemunho"}
               </Button>
             </form>
           </div>

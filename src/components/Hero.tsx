@@ -1,5 +1,5 @@
 import heroImage from "@/assets/hero-image.jpg";
-import logo from "@/assets/logo.jpeg";
+import hero3 from "@/assets/hero3.png";
 const Hero = () => {
   const scrollToContact = () => {
     const element = document.getElementById("contact");
@@ -12,7 +12,7 @@ const Hero = () => {
   return <section className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 bg-cover bg-center" style={{
-      backgroundImage: `url(${logo})`
+      backgroundImage: `url(${hero3})`
     }}>
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
       </div>

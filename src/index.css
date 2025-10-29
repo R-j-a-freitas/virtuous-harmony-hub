@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fonts are loaded via Google Fonts in index.html */
+/* 'Eyesome Script' maps to 'Great Vibes' (loaded from Google Fonts) */
+/* 'CMU Serif' maps to 'Lora' (loaded from Google Fonts) */
+/* Configuration is done in tailwind.config.ts */
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

@@ -51,7 +51,7 @@ const Footer = () => {
             <h3 className="font-serif text-lg text-foreground mb-4">Redes Sociais</h3>
             <div className="flex gap-4">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/virtuousensemble?igsh=cXhpbnpvMXh4b2p4"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors"
@@ -59,7 +59,7 @@ const Footer = () => {
                 <Instagram className="w-5 h-5 text-foreground" />
               </a>
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/share/1AhZcSBF5B/?mibextid=wwXIfr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors"
@@ -67,7 +67,7 @@ const Footer = () => {
                 <Facebook className="w-5 h-5 text-foreground" />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@VirtuousEnsemble"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors"

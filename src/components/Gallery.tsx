@@ -1,7 +1,7 @@
-import gallery1 from "@/assets/gallery-1.jpg";
-import gallery2 from "@/assets/gallery-2.jpg";
-import gallery3 from "@/assets/gallery-3.jpg";
-import gallery4 from "@/assets/gallery-4.jpg";
+import gallery1 from "@/Galeria/1.jpeg";
+import gallery2 from "@/Galeria/2.jpeg";
+import gallery3 from "@/Galeria/3.jpeg";
+import gallery4 from "@/Galeria/4.jpeg";
 
 const Gallery = () => {
   const images = [

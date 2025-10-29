@@ -54,8 +54,8 @@ export default {
         },
       },
       fontFamily: {
-        serif: ['Playfair Display', 'serif'],
-        sans: ['Inter', 'sans-serif'],
+        serif: ['Great Vibes', 'cursive'], // Eyesome Script uses Great Vibes
+        sans: ['Lora', 'serif'], // CMU Serif uses Lora
       },
       borderRadius: {
         lg: "var(--radius)",
