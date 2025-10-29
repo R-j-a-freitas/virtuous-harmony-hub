@@ -96,11 +96,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- PARTE 3: POLÍTICAS RLS PARA EVENTS (PROTEGIDAS)
 -- ============================================================================
 
--- Remover políticas antigas
+-- Remover políticas antigas (todas as possíveis políticas)
 DROP POLICY IF EXISTS "Admins can view all events" ON public.events;
 DROP POLICY IF EXISTS "Admins can update events" ON public.events;
 DROP POLICY IF EXISTS "Admins can delete events" ON public.events;
 DROP POLICY IF EXISTS "Admins can insert events" ON public.events;
+DROP POLICY IF EXISTS "Anyone can insert events" ON public.events;
+DROP POLICY IF EXISTS "Public can view confirmed events" ON public.events;
+DROP POLICY IF EXISTS "Anyone can view confirmed events" ON public.events;
 
 -- Política: Admins podem ver TODOS os eventos (incluindo dados sensíveis)
 CREATE POLICY "Admins can view all events"
@@ -137,10 +140,12 @@ WITH CHECK (true);
 -- PARTE 4: POLÍTICAS RLS PARA TESTIMONIALS (PROTEGIDAS)
 -- ============================================================================
 
--- Remover políticas antigas
+-- Remover políticas antigas de testimonials
 DROP POLICY IF EXISTS "Public can view approved testimonials" ON public.testimonials;
 DROP POLICY IF EXISTS "Anyone can insert testimonials" ON public.testimonials;
 DROP POLICY IF EXISTS "Admins can manage testimonials" ON public.testimonials;
+DROP POLICY IF EXISTS "Admins can update testimonials" ON public.testimonials;
+DROP POLICY IF EXISTS "Admins can delete testimonials" ON public.testimonials;
 
 -- Política: Público pode ver testemunhos aprovados
 CREATE POLICY "Public can view approved testimonials"
