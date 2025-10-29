@@ -6,13 +6,25 @@ const PublicEvents = () => {
   const { data: events, isLoading, error } = useQuery({
     queryKey: ["public-events"],
     queryFn: async () => {
+      // Usar a view pública que não expõe dados sensíveis dos clientes
       const { data, error } = await supabase
-        .from("events")
-        .select("id, title, event_date, event_time, location, status, created_at")
-        .eq("status", "confirmed")
+        .from("public_events")
+        .select("*")
         .order("event_date", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback: se a view não existir, usar query direta apenas com campos públicos
+        console.warn("View public_events não encontrada, usando fallback:", error);
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("events")
+          .select("id, title, event_date, event_time, location, status, created_at")
+          .eq("status", "confirmed")
+          .order("event_date", { ascending: true });
+        
+        if (fallbackError) throw fallbackError;
+        return fallbackData;
+      }
+      
       return data;
     },
   });

@@ -28,18 +28,55 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-// Credenciais de administrador
-const ADMIN_CREDENTIALS = {
-  email: "virtuousensemble@gmail.com",
-  password: "!P4tr1c14+"
-};
+import { useEffect } from "react";
 
 const AdminPanel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [showAddEventForm, setShowAddEventForm] = useState(false);
   const queryClient = useQueryClient();
+
+  // Verificar autenticação ao carregar
+  useEffect(() => {
+    checkAuth();
+    
+    // Listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+      setIsCheckingAuth(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      
+      // Verificar se o usuário tem role de admin
+      if (session) {
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        if (roleError || !roleData) {
+          // Usuário não é admin
+          await supabase.auth.signOut();
+          setIsAuthenticated(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -191,31 +228,87 @@ const AdminPanel = () => {
     },
   });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (loginData.email === ADMIN_CREDENTIALS.email && loginData.password === ADMIN_CREDENTIALS.password) {
+    try {
+      // Fazer login com Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (error) {
+        toast({
+          title: "Erro de autenticação",
+          description: error.message || "Email ou senha incorretos",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!data.user) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Não foi possível realizar o login",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário tem role de admin
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (roleError || !roleData) {
+        // Usuário não é admin - fazer logout
+        await supabase.auth.signOut();
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissões de administrador",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Login bem-sucedido
       setIsAuthenticated(true);
+      setLoginData({ email: "", password: "" });
       toast({
         title: "Login realizado com sucesso",
         description: "Bem-vindo ao painel administrativo!",
       });
-    } else {
+    } catch (error: any) {
+      console.error('Login error:', error);
       toast({
-        title: "Credenciais inválidas",
-        description: "Email ou senha incorretos",
+        title: "Erro de autenticação",
+        description: error.message || "Ocorreu um erro ao fazer login",
         variant: "destructive"
       });
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginData({ email: "", password: "" });
-    toast({
-      title: "Logout realizado",
-      description: "Sessão encerrada com sucesso",
-    });
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setIsAuthenticated(false);
+      setLoginData({ email: "", password: "" });
+      toast({
+        title: "Logout realizado",
+        description: "Sessão encerrada com sucesso",
+      });
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer logout",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEventStatusChange = async (eventId: string, status: string) => {
@@ -320,6 +413,22 @@ const AdminPanel = () => {
     }
   };
 
+  // Mostrar loading enquanto verifica autenticação
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">A verificar autenticação...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Se não estiver autenticado, mostrar formulário de login
   if (!isAuthenticated) {
     return (
@@ -330,6 +439,9 @@ const AdminPanel = () => {
               <Lock className="h-5 w-5" />
               Painel Administrativo
             </CardTitle>
+            <p className="text-center text-sm text-muted-foreground mt-2">
+              Acesso restrito a administradores
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -340,8 +452,9 @@ const AdminPanel = () => {
                   type="email"
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  placeholder="virtuousensemble@gmail.com"
+                  placeholder="admin@example.com"
                   required
+                  autoComplete="email"
                 />
               </div>
               <div>
@@ -353,9 +466,10 @@ const AdminPanel = () => {
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                   placeholder="Digite sua senha"
                   required
+                  autoComplete="current-password"
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={!loginData.email || !loginData.password}>
                 <Lock className="mr-2 h-4 w-4" />
                 Entrar
               </Button>
