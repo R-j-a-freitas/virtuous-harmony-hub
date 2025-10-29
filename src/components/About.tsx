@@ -2,7 +2,7 @@ import { Music, Heart, Star, Users } from "lucide-react";
 const About = () => {
   const features = [{
     icon: Music,
-    title: "Música Clássica",
+    title: "Música Diversa",
     description: "Repertório elegante e sofisticado"
   }, {
     icon: Heart,
