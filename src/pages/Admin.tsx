@@ -77,18 +77,31 @@ const AdminPanel = () => {
       // Verificar se o usuário tem role de admin
       if (session) {
         console.log('🔍 Checking admin role for user:', session.user.id);
+        
+        // Tentar primeiro via RPC (mais seguro)
+        const { data: isAdminRpc, error: rpcError } = await supabase.rpc('is_admin', {
+          user_uuid: session.user.id
+        });
+        
+        if (!rpcError && isAdminRpc === true) {
+          console.log('✅ Admin role confirmed via RPC');
+          setIsAuthenticated(true);
+          return;
+        }
+        
+        // Fallback: tentar via SELECT direto (se RPC falhar)
+        console.log('⚠️ RPC failed, trying direct SELECT:', rpcError);
         const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
           .select('role, user_id')
           .eq('user_id', session.user.id)
           .eq('role', 'admin')
-          .single();
+          .maybeSingle();
         
-        console.log('👤 Role check result:', { roleData, roleError });
+        console.log('👤 Role check result:', { roleData, roleError, isAdminRpc, rpcError });
         
         if (roleError) {
           console.error('❌ Role check error:', roleError);
-          // Se for erro de "no rows" (PGRST116), o utilizador não tem role
           if (roleError.code === 'PGRST116') {
             console.error('❌ User does not have admin role');
             await supabase.auth.signOut();
@@ -99,12 +112,11 @@ const AdminPanel = () => {
               variant: "destructive"
             });
           } else {
-            // Outros erros (provavelmente RLS bloqueando)
-            console.error('❌ RLS may be blocking role check. Error:', roleError.message);
+            console.error('❌ RLS may be blocking. Error:', roleError.message);
             setIsAuthenticated(false);
             toast({
-              title: "Erro de autenticação",
-              description: "Não foi possível verificar permissões. Verifique as políticas RLS.",
+              title: "Erro de verificação",
+              description: `Não foi possível verificar permissões. Execute CORRIGIR_AUTENTICACAO_COMPLETO.sql no Supabase. Erro: ${roleError.message}`,
               variant: "destructive"
             });
           }
@@ -376,36 +388,53 @@ const AdminPanel = () => {
         return;
       }
 
-      // Verificar se o usuário tem role de admin
+      // Verificar role de admin (tentativa via RPC, fallback para SELECT)
       console.log('🔍 Checking admin role after login for user:', data.user.id);
+      
+      // Tentar via RPC primeiro
+      const { data: isAdminRpc, error: rpcError } = await supabase.rpc('is_admin', {
+        user_uuid: data.user.id
+      });
+      
+      if (!rpcError && isAdminRpc === true) {
+        console.log('✅ Admin role confirmed via RPC');
+        setIsAuthenticated(true);
+        setLoginData({ email: "", password: "" });
+        toast({
+          title: "Login realizado com sucesso",
+          description: "Bem-vindo ao painel administrativo!",
+        });
+        return;
+      }
+      
+      // Fallback: SELECT direto
+      console.log('⚠️ RPC failed, trying SELECT. RPC error:', rpcError);
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role, user_id')
         .eq('user_id', data.user.id)
         .eq('role', 'admin')
-        .single();
+        .maybeSingle();
 
-      console.log('👤 Login role check result:', { roleData, roleError });
+      console.log('👤 Login role check result:', { roleData, roleError, isAdminRpc, rpcError });
 
       if (roleError) {
         console.error('❌ Role check error during login:', roleError);
         
-        // Se for erro de "no rows", o utilizador não tem role admin
         if (roleError.code === 'PGRST116' || roleError.message?.includes('No rows')) {
           await supabase.auth.signOut();
           toast({
             title: "Acesso negado",
-            description: "Você não tem permissões de administrador. Contacte o administrador do sistema.",
+            description: "Você não tem permissões de administrador. Execute: SELECT public.create_admin_by_email('" + data.user.email + "');",
             variant: "destructive"
           });
           return;
         } else {
-          // Outros erros (provavelmente RLS bloqueando)
           console.error('❌ RLS may be blocking. Error:', roleError);
           await supabase.auth.signOut();
           toast({
             title: "Erro de verificação",
-            description: "Não foi possível verificar permissões. As políticas RLS podem estar bloqueando. Verifique DIAGNOSTICO_AUTENTICACAO.sql",
+            description: `Não foi possível verificar permissões. Execute CORRIGIR_AUTENTICACAO_COMPLETO.sql no Supabase.`,
             variant: "destructive"
           });
           return;
