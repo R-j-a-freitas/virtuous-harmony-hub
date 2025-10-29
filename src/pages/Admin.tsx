@@ -61,27 +61,72 @@ const AdminPanel = () => {
 
   const checkAuth = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Checking authentication...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        setIsAuthenticated(false);
+        setIsCheckingAuth(false);
+        return;
+      }
+      
+      console.log('📋 Session:', session ? `User ID: ${session.user.id}, Email: ${session.user.email}` : 'No session');
       setIsAuthenticated(!!session);
       
       // Verificar se o usuário tem role de admin
       if (session) {
+        console.log('🔍 Checking admin role for user:', session.user.id);
         const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
-          .select('role')
+          .select('role, user_id')
           .eq('user_id', session.user.id)
           .eq('role', 'admin')
           .single();
         
-        if (roleError || !roleData) {
-          // Usuário não é admin
+        console.log('👤 Role check result:', { roleData, roleError });
+        
+        if (roleError) {
+          console.error('❌ Role check error:', roleError);
+          // Se for erro de "no rows" (PGRST116), o utilizador não tem role
+          if (roleError.code === 'PGRST116') {
+            console.error('❌ User does not have admin role');
+            await supabase.auth.signOut();
+            setIsAuthenticated(false);
+            toast({
+              title: "Acesso negado",
+              description: "Você não tem permissões de administrador",
+              variant: "destructive"
+            });
+          } else {
+            // Outros erros (provavelmente RLS bloqueando)
+            console.error('❌ RLS may be blocking role check. Error:', roleError.message);
+            setIsAuthenticated(false);
+            toast({
+              title: "Erro de autenticação",
+              description: "Não foi possível verificar permissões. Verifique as políticas RLS.",
+              variant: "destructive"
+            });
+          }
+        } else if (!roleData) {
+          console.error('❌ No role data returned');
           await supabase.auth.signOut();
           setIsAuthenticated(false);
+        } else {
+          console.log('✅ Admin role confirmed:', roleData);
+          setIsAuthenticated(true);
         }
+      } else {
+        console.log('ℹ️ No active session');
       }
     } catch (error) {
-      console.error('Error checking auth:', error);
+      console.error('❌ Error checking auth:', error);
       setIsAuthenticated(false);
+      toast({
+        title: "Erro de autenticação",
+        description: "Ocorreu um erro ao verificar autenticação",
+        variant: "destructive"
+      });
     } finally {
       setIsCheckingAuth(false);
     }
@@ -332,19 +377,47 @@ const AdminPanel = () => {
       }
 
       // Verificar se o usuário tem role de admin
+      console.log('🔍 Checking admin role after login for user:', data.user.id);
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('role, user_id')
         .eq('user_id', data.user.id)
         .eq('role', 'admin')
         .single();
 
-      if (roleError || !roleData) {
-        // Usuário não é admin - fazer logout
+      console.log('👤 Login role check result:', { roleData, roleError });
+
+      if (roleError) {
+        console.error('❌ Role check error during login:', roleError);
+        
+        // Se for erro de "no rows", o utilizador não tem role admin
+        if (roleError.code === 'PGRST116' || roleError.message?.includes('No rows')) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Acesso negado",
+            description: "Você não tem permissões de administrador. Contacte o administrador do sistema.",
+            variant: "destructive"
+          });
+          return;
+        } else {
+          // Outros erros (provavelmente RLS bloqueando)
+          console.error('❌ RLS may be blocking. Error:', roleError);
+          await supabase.auth.signOut();
+          toast({
+            title: "Erro de verificação",
+            description: "Não foi possível verificar permissões. As políticas RLS podem estar bloqueando. Verifique DIAGNOSTICO_AUTENTICACAO.sql",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      if (!roleData) {
+        console.error('❌ No role data returned during login');
         await supabase.auth.signOut();
         toast({
           title: "Acesso negado",
-          description: "Você não tem permissões de administrador",
+          description: "Permissões de administrador não encontradas",
           variant: "destructive"
         });
         return;
