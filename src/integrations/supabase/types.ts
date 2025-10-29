@@ -95,9 +95,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role: 'admin' | 'moderator'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role: 'admin' | 'moderator'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role?: 'admin' | 'moderator'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      public_events: {
+        Row: {
+          id: string
+          title: string
+          event_date: string
+          event_time: string | null
+          location: string
+          description: string | null
+          status: string | null
+          created_at: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

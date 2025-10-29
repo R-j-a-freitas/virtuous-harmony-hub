@@ -112,8 +112,21 @@ serve(async (req) => {
       }
     );
 
-    // Get the RESEND API key (fallback to hardcoded key if env var not set)
-    const resendApiKey = Deno.env.get('RESEND_API_KEY') || 're_faU39bCe_LTtaa6azqp4PYmEj6Ezgprom';
+    // Get the RESEND API key from environment variables (REQUIRED - no hardcoded fallback)
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    
+    if (!resendApiKey) {
+      console.error('❌ RESEND_API_KEY not configured in environment variables');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Email service configuration error. Please contact support.' 
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
     
     // Initialize Resend client
     const resend = new Resend(resendApiKey);
@@ -217,15 +230,14 @@ serve(async (req) => {
     });
 
     if (emailResult.error) {
+      // Log detailed error server-side (for debugging)
       console.error('❌ Email sending failed:', emailResult.error);
       console.error('❌ Error details:', JSON.stringify(emailResult.error, null, 2));
       
-      // Return detailed error for debugging
+      // Return generic error message to client (no internal details)
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to send email', 
-          details: emailResult.error,
-          message: emailResult.error.message || 'Unknown error'
+          error: 'Unable to send email. Please try again later or contact us directly at virtuousensemble@gmail.com.'
         }),
         { 
           status: 500,
