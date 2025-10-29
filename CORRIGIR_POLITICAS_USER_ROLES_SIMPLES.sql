@@ -1,32 +1,35 @@
 -- ============================================================================
--- CORRIGIR POLÍTICAS RLS DA TABELA user_roles
--- ============================================================================
--- Este script corrige as políticas que podem estar a bloquear a autenticação
+-- CORRIGIR POLÍTICAS RLS - VERSÃO SIMPLES (SEM CONFLITOS)
 -- ============================================================================
 
--- Remover políticas antigas
+-- Remover TODAS as políticas antigas primeiro
 DROP POLICY IF EXISTS "Users can view their own role" ON public.user_roles;
+DROP POLICY IF EXISTS "Authenticated users can check their role" ON public.user_roles;
 DROP POLICY IF EXISTS "Admins can manage roles" ON public.user_roles;
 DROP POLICY IF EXISTS "Public can view roles" ON public.user_roles;
 
 -- Garantir que RLS está habilitado
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- Política: Utilizadores autenticados podem ver seu próprio role
+-- Garantir permissões básicas
+GRANT SELECT ON public.user_roles TO authenticated;
+GRANT SELECT ON public.user_roles TO anon;
+
+-- Criar políticas (uma de cada vez, sem conflitos)
+-- Política 1: Utilizadores podem ver sua própria role
 CREATE POLICY "Users can view their own role"
 ON public.user_roles
 FOR SELECT
 USING (auth.uid() = user_id);
 
--- IMPORTANTE: Permitir que utilizadores vejam roles durante autenticação
--- Esta política permite que qualquer utilizador autenticado veja roles
--- (necessário para o checkAuth funcionar)
+-- Política 2: Utilizadores autenticados podem verificar qualquer role
+-- (Necessário para verificar permissões durante login)
 CREATE POLICY "Authenticated users can check their role"
 ON public.user_roles
 FOR SELECT
 USING (auth.role() = 'authenticated');
 
--- Política: Somente admins podem gerenciar roles (inserir/atualizar/deletar)
+-- Política 3: Admins podem gerenciar roles
 CREATE POLICY "Admins can manage roles"
 ON public.user_roles
 FOR ALL
@@ -44,7 +47,7 @@ SELECT
 FROM pg_policies
 WHERE schemaname = 'public' AND tablename = 'user_roles';
 
--- Listar todas as políticas criadas
+-- Listar todas as políticas
 SELECT 
   policyname,
   cmd,
@@ -53,7 +56,7 @@ FROM pg_policies
 WHERE schemaname = 'public' AND tablename = 'user_roles'
 ORDER BY policyname;
 
--- Teste: Verificar se o utilizador pode ver sua role
+-- Verificar se o utilizador pode ver sua role
 SELECT 
   'Teste de verificação:' as teste,
   u.email,
@@ -65,7 +68,7 @@ WHERE u.email = 'rjafreitas@gmail.com';
 
 DO $$
 BEGIN
-  RAISE NOTICE '✅ Políticas RLS corrigidas para user_roles';
+  RAISE NOTICE '✅ Políticas RLS corrigidas!';
   RAISE NOTICE '✅ Utilizadores autenticados podem agora verificar roles';
   RAISE NOTICE '';
   RAISE NOTICE 'TESTE AGORA:';
