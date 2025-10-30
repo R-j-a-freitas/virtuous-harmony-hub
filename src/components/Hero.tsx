@@ -10,24 +10,26 @@ const Hero = () => {
       });
     }
   };
-  return <section className="relative h-screen flex items-center justify-center overflow-hidden">
+  return <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background Image */}
-      <div className="absolute inset-0 bg-cover bg-center" style={{
+      <div className="w-full h-[60vh] bg-cover bg-center" style={{
       backgroundImage: `url(${faixa})`
     }}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          
-        </div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mr-[200px]">
-        <h1 className="font-serif text-4xl md:text-6xl mb-6 animate-fade-in py-[150px] text-[#e6c068] lg:text-8xl">Harmonia perfeita para 
-momentos únicos</h1>
-        <p className="text-lg text-muted-foreground mb-8 font-sans animate-fade-in md:text-3xl">Música que eleva o seu evento, com a sofisticação e emoção que merece</p>
-        <button onClick={scrollToContact} className="bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-sans font-medium hover:bg-primary/90 transition-all hover:scale-105 animate-fade-in">
-          Reserve o Seu Evento
-        </button>
+      <div className="flex-1 flex items-center justify-center px-4 py-16 bg-background">
+        <div className="text-center max-w-4xl mx-auto">
+          <h1 className="font-serif text-4xl md:text-6xl lg:text-8xl mb-6 animate-fade-in text-gold">
+            Harmonia perfeita para momentos únicos
+          </h1>
+          <p className="text-lg md:text-3xl text-muted-foreground mb-8 font-sans animate-fade-in">
+            Música que eleva o seu evento, com a sofisticação e emoção que merece
+          </p>
+          <button onClick={scrollToContact} className="bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-sans font-medium hover:bg-primary/90 transition-all hover:scale-105 animate-fade-in">
+            Reserve o Seu Evento
+          </button>
+        </div>
       </div>
     </section>;
 };
