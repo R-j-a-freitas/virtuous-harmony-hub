@@ -74,7 +74,7 @@ const PublicEvents = () => {
                   </span>
                 </div>
                 
-                <h3 className="font-serif mb-3 text-2xl text-[#e6c068] font-extralight">
+                <h3 className="font-sans mb-3 text-2xl text-[#e6c068] font-extralight">
                   {event.title}
                 </h3>
                 
