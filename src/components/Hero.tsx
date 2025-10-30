@@ -10,15 +10,15 @@ const Hero = () => {
       });
     }
   };
-  return <section className="relative min-h-screen flex flex-col overflow-hidden">
-      {/* Background Image */}
-      <div className="w-full h-[60vh] bg-cover bg-center" style={{
+  return <section className="relative flex flex-col">
+      {/* Background Image - Full height to show complete image */}
+      <div className="w-full h-screen bg-cover bg-center" style={{
       backgroundImage: `url(${faixa})`
     }}>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-16 bg-background">
+      {/* Content - Separate section below image */}
+      <div className="flex items-center justify-center px-4 py-16 bg-background">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="font-serif text-4xl md:text-6xl lg:text-8xl mb-6 animate-fade-in text-gold">
             Harmonia perfeita para momentos únicos
