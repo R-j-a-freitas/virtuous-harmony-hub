@@ -3,7 +3,7 @@ const Services = () => {
   const services = [{
     title: "Casamentos",
     description: "Música elegante para cerimónias e recepções",
-    features: ["Entrada dos noivos", "Cerimónia completa", "Cocktail de boas-vindas", "Jantar de recepção"]
+    features: ["Entrada dos noivos", "Cerimónia completa", "Cocktail de boas-vindas"]
   }, {
     title: "Eventos Corporativos",
     description: "Sofisticação para eventos empresariais",
