@@ -16,7 +16,7 @@ const Hero = () => {
       backgroundImage: `url(${faixa})`
     }}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <img src={faixa} alt="Virtuous Ensemble" className="max-w-2xl w-full px-4" />
+          
         </div>
       </div>
 
