@@ -91,13 +91,6 @@ const PublicEvents = () => {
                       </span>
                     </div>}
                 </div>
-                
-                
-                <div className="mt-4 pt-4 border-t border-border">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Confirmado
-                  </span>
-                </div>
               </div>)}
           </div> : <div className="text-center">
             <div className="bg-card border border-border rounded-lg p-12">
