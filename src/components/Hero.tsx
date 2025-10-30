@@ -1,5 +1,6 @@
 import heroImage from "@/assets/hero-image.jpg";
 import hero3 from "@/assets/hero3.png";
+import faixa from "@/assets/faixa.png";
 const Hero = () => {
   const scrollToContact = () => {
     const element = document.getElementById("contact");
@@ -14,7 +15,9 @@ const Hero = () => {
       <div className="absolute inset-0 bg-cover bg-center" style={{
       backgroundImage: `url(${hero3})`
     }}>
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img src={faixa} alt="Virtuous Ensemble" className="max-w-2xl w-full px-4" />
+        </div>
       </div>
 
       {/* Content */}
