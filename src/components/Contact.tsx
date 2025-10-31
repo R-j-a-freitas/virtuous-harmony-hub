@@ -222,9 +222,7 @@ const Contact = () => {
           <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
             Contacte-nos
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">
-            Estamos prontos para tornar o seu evento inesquecível
-          </p>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Cada detalhe conta e o nosso compromisso é transformar o seu momento num evento inesquecível, com alma, dedicação e excelência.</p>
         </div>
 
         <div className="max-w-3xl mx-auto">
