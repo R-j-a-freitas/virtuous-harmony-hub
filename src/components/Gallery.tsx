@@ -26,9 +26,7 @@ const Gallery = () => {
           <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
             Galeria
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">
-            Momentos especiais capturados durante os nossos eventos
-          </p>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Momentos especiais captados nos nossos eventos</p>
         </div>
 
         {galleryImages.length === 0 ? <p className="text-center text-muted-foreground">
