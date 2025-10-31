@@ -126,9 +126,7 @@ const Testimonials = () => {
           <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
             Testemunhos
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans mb-8">
-            O que os nossos clientes dizem sobre nós
-          </p>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans mb-8">Cada detalhe conta e o nosso compromisso é transformar o seu momento num evento inesquecível, com alma, dedicação e excelência.</p>
           <Button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-primary text-primary-foreground hover:bg-primary/90">
             {isFormOpen ? "Cancelar" : "Deixar Testemunho"}
           </Button>
