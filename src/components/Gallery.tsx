@@ -61,7 +61,7 @@ const Gallery = () => {
                         {image.title}
                       </h3>
                       {image.description && (
-                        <p className="text-white/80 text-sm mt-1">
+                        <p className="text-white/80 text-sm mt-1 font-sans font-normal">
                           {image.description}
                         </p>
                       )}
