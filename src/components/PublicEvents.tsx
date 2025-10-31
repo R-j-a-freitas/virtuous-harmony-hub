@@ -36,7 +36,7 @@ const PublicEvents = () => {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">A carregar eventos...</p>
+            <p className="mt-4 text-muted-foreground">Eventos confirmados até ao momento</p>
           </div>
         </div>
       </section>;
