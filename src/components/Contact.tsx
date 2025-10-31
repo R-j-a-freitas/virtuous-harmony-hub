@@ -218,15 +218,17 @@ const Contact = () => {
   };
   return <section id="contact" className="py-20 md:py-32 bg-card">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
-            Contacte-nos
-          </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Cada detalhe conta e o nosso compromisso é transformar o seu momento num evento inesquecível, com alma, dedicação e excelência.</p>
-        </div>
+      <div className="text-center mb-16 animate-fade-in">
+        <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
+          Contacte-nos
+        </h2>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Cada detalhe conta e o nosso compromisso é transformar o seu momento num evento inesquecível, com alma, dedicação e excelência.</p>
+      </div>
 
-        <div className="max-w-3xl mx-auto">
-          <form onSubmit={handleSubmit} className="space-y-6 bg-background border border-border rounded-lg p-8">
+      <div className="max-w-3xl mx-auto animate-fade-in" style={{
+          animationDelay: '0.2s'
+        }}>
+        <form onSubmit={handleSubmit} className="space-y-6 bg-background border border-border rounded-lg p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-foreground mb-2 font-sans">Nome *</label>

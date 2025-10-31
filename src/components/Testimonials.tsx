@@ -122,66 +122,24 @@ const Testimonials = () => {
   };
   return <section id="testimonials" className="py-20 md:py-32 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
-            Testemunhos
-          </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans mb-8">O que os nossos clientes dizem sobre nós</p>
-          <Button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            {isFormOpen ? "Cancelar" : "Deixar Testemunho"}
-          </Button>
-        </div>
+      <div className="text-center mb-16 animate-fade-in">
+        <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
+          Testemunhos
+        </h2>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans mb-8">O que os nossos clientes dizem sobre nós</p>
+        <Button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          {isFormOpen ? "Cancelar" : "Deixar Testemunho"}
+        </Button>
+      </div>
 
-        {isFormOpen && <div className="max-w-2xl mx-auto mb-16 bg-card border border-border rounded-lg p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-foreground mb-2 font-sans">Nome *</label>
-                <Input value={name} onChange={e => {
-              setName(e.target.value);
-              if (errors.name) setErrors(prev => ({
-                ...prev,
-                name: ""
-              }));
-            }} placeholder="O seu nome" className={`w-full ${errors.name ? "border-red-500" : ""}`} maxLength={100} required />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-              </div>
-              <div>
-                <label className="block text-foreground mb-2 font-sans">Testemunho *</label>
-                <Textarea value={content} onChange={e => {
-              setContent(e.target.value);
-              if (errors.content) setErrors(prev => ({
-                ...prev,
-                content: ""
-              }));
-            }} placeholder="Partilhe a sua experiência..." rows={4} className={`w-full ${errors.content ? "border-red-500" : ""}`} maxLength={1000} required />
-                {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
-                <p className="text-sm text-muted-foreground mt-1">
-                  {content.length}/1000 caracteres
-                </p>
-              </div>
-              <div>
-                <label className="block text-foreground mb-2 font-sans">Avaliação *</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map(star => <button key={star} type="button" onClick={() => {
-                setRating(star);
-                if (errors.rating) setErrors(prev => ({
-                  ...prev,
-                  rating: ""
-                }));
-              }} className="focus:outline-none">
-                      <Star className={`w-8 h-8 ${star <= rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                    </button>)}
-                </div>
-                {errors.rating && <p className="text-red-500 text-sm mt-1">{errors.rating}</p>}
-              </div>
-              <Button type="submit" disabled={isSubmitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                {isSubmitting ? "A enviar..." : "Enviar Testemunho"}
-              </Button>
-            </form>
-          </div>}
+      {isFormOpen && <div className="max-w-2xl mx-auto mb-16 bg-card border border-border rounded-lg p-8 animate-fade-in">
+...
+        </div>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {testimonials?.map(testimonial => <div key={testimonial.id} className="bg-card border border-border rounded-lg p-6 hover:border-primary transition-all">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {testimonials?.map((testimonial, index) => <div key={testimonial.id} className="bg-card border border-border rounded-lg p-6 hover:border-primary transition-all animate-fade-in" style={{
+                animationDelay: `${index * 0.1}s`
+              }}>
               <div className="flex gap-1 mb-4">
                 {Array.from({
               length: testimonial.rating
