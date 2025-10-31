@@ -56,9 +56,7 @@ const PublicEvents = () => {
           <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
             Próximos Eventos
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">
-            Eventos confirmados que temos o prazer de organizar
-          </p>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Eventos confirmados até ao momento</p>
         </div>
 
         {events && events.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
