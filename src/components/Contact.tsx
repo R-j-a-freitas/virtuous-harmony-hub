@@ -233,7 +233,7 @@ const Contact = () => {
         <div className="bg-background border border-border rounded-lg p-8 space-y-6 my-0">
           <h3 style={{
             color: 'hsl(var(--foreground))'
-          }} className="font-serif text-3xl mb-6 text-[#e6c068]">Informações de Contacto</h3>
+          }} className="font-serif text-3xl mb-6 text-[#e8b130]">Informações de Contacto</h3>
           
           <div className="space-y-4">
             {/* Email */}
