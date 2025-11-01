@@ -227,11 +227,13 @@ const Contact = () => {
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in" style={{
-          animationDelay: '0.2s'
-        }}>
+        animationDelay: '0.2s'
+      }}>
         {/* Contact Information */}
-        <div className="bg-background border border-border rounded-lg p-8 space-y-6">
-          <h3 className="font-serif text-3xl text-foreground mb-6" style={{ color: 'hsl(var(--foreground))' }}>Informações de Contacto</h3>
+        <div className="bg-background border border-border rounded-lg p-8 space-y-6 my-0">
+          <h3 style={{
+            color: 'hsl(var(--foreground))'
+          }} className="font-serif text-3xl mb-6 text-[#e6c068]">Informações de Contacto</h3>
           
           <div className="space-y-4">
             {/* Email */}
@@ -241,10 +243,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-sans font-semibold text-foreground mb-1">Email</h4>
-                <a 
-                  href="mailto:virtuousensemble@gmail.com" 
-                  className="text-muted-foreground hover:text-primary transition-colors font-sans"
-                >
+                <a href="mailto:virtuousensemble@gmail.com" className="text-muted-foreground hover:text-primary transition-colors font-sans">
                   virtuousensemble@gmail.com
                 </a>
               </div>
@@ -257,12 +256,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-sans font-semibold text-foreground mb-1">WhatsApp</h4>
-                <a 
-                  href="https://wa.me/351965096292" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors font-sans"
-                >
+                <a href="https://wa.me/351965096292" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors font-sans">
                   +351 965 096 292
                 </a>
               </div>
