@@ -6,6 +6,7 @@ import TimePicker from "./ui/time-picker";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { Mail, MessageCircle } from "lucide-react";
 
 // Input validation schema with security constraints
 const contactFormSchema = z.object({
@@ -225,9 +226,57 @@ const Contact = () => {
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Cada detalhe conta e o nosso compromisso é transformar o seu momento num evento inesquecível, com alma, dedicação e excelência.</p>
       </div>
 
-      <div className="max-w-3xl mx-auto animate-fade-in" style={{
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in" style={{
           animationDelay: '0.2s'
         }}>
+        {/* Contact Information */}
+        <div className="bg-background border border-border rounded-lg p-8 space-y-6">
+          <h3 className="font-serif text-3xl text-foreground mb-6">Informações de Contacto</h3>
+          
+          <div className="space-y-4">
+            {/* Email */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-foreground" />
+              </div>
+              <div>
+                <h4 className="font-sans font-semibold text-foreground mb-1">Email</h4>
+                <a 
+                  href="mailto:virtuousensemble@gmail.com" 
+                  className="text-muted-foreground hover:text-primary transition-colors font-sans"
+                >
+                  virtuousensemble@gmail.com
+                </a>
+              </div>
+            </div>
+
+            {/* WhatsApp */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="w-6 h-6 text-foreground" />
+              </div>
+              <div>
+                <h4 className="font-sans font-semibold text-foreground mb-1">WhatsApp</h4>
+                <a 
+                  href="https://wa.me/351965096292" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors font-sans"
+                >
+                  +351 965 096 292
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-border">
+            <p className="text-muted-foreground font-sans text-sm">
+              Estamos disponíveis para responder a todas as suas questões e ajudá-lo a tornar o seu evento inesquecível.
+            </p>
+          </div>
+        </div>
+
+        {/* Contact Form */}
         <form onSubmit={handleSubmit} className="space-y-6 bg-background border border-border rounded-lg p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
