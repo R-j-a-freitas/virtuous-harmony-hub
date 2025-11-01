@@ -231,7 +231,7 @@ const Contact = () => {
         }}>
         {/* Contact Information */}
         <div className="bg-background border border-border rounded-lg p-8 space-y-6">
-          <h3 className="font-serif text-3xl text-foreground mb-6">Informações de Contacto</h3>
+          <h3 className="font-serif text-3xl text-foreground mb-6" style={{ color: 'hsl(var(--foreground))' }}>Informações de Contacto</h3>
           
           <div className="space-y-4">
             {/* Email */}
