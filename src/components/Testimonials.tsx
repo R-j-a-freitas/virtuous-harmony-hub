@@ -126,7 +126,7 @@ const Testimonials = () => {
         <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">
           Testemunhos
         </h2>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans mb-8">O que os nossos clientes dizem sobre nós</p>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans mb-8">O que dizem sobre nós</p>
         <Button onClick={() => setIsFormOpen(!isFormOpen)} className="bg-primary text-primary-foreground hover:bg-primary/90">
           {isFormOpen ? "Cancelar" : "Deixar Testemunho"}
         </Button>
@@ -138,8 +138,8 @@ const Testimonials = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {testimonials?.map((testimonial, index) => <div key={testimonial.id} className="bg-card border border-border rounded-lg p-6 hover:border-primary transition-all animate-fade-in" style={{
-                animationDelay: `${index * 0.1}s`
-              }}>
+          animationDelay: `${index * 0.1}s`
+        }}>
               <div className="flex gap-1 mb-4">
                 {Array.from({
               length: testimonial.rating
