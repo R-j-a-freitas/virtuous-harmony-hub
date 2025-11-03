@@ -21,7 +21,7 @@ const About = () => {
       <div className="container mx-auto px-4">
       <div className="text-center mb-16 animate-fade-in">
         <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">Sobre os Virtuous Ensemble</h2>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Somos um grupo de músicos profissionais dedicados a criar momentos inesquecíveis através da música clássica elegante e personalizada. Com anos de experiência em casamentos, cerimónias e eventos especiais, garantimos que cada performance seja única e memorável</p>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Músicos profissionais dedicados a criar momentos inesquecíveis através de repertório diversificado, elegante e personalizado. Vasta experiência em eventos, cerimónias e momentos especiais, garantindo performances únicas e memoráveis</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
