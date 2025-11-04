@@ -1,0 +1,18 @@
+---
+deployment:
+  tasks:
+    # Define o caminho de deployment (ajuste conforme necessário)
+    - export DEPLOYPATH=/home/$USER/public_html/
+    
+    # Instala as dependências do Node.js
+    - npm install
+    
+    # Executa o build do projeto Vite
+    - npm run build
+    
+    # Copia todos os arquivos da pasta dist para public_html
+    - /bin/cp -R dist/* $DEPLOYPATH
+    
+    # Copia arquivos ocultos importantes (como .htaccess) se existirem
+    - if [ -f dist/.htaccess ]; then /bin/cp dist/.htaccess $DEPLOYPATH; fi
+
