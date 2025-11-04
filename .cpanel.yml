@@ -3,9 +3,11 @@ deployment:
   tasks:
     - |
       echo "==== Virtuous Ensemble: deploy iniciado ===="
-      export DEPLOYPATH=/home/virtuou1/public_html/
-      export APPROOT=/home/virtuou1/repositories/virtuous-harmony-hub
-      cd $APPROOT
+      APPROOT="/home/virtuou1/repositories/virtuous-harmony-hub"
+      DEPLOYPATH="/home/virtuou1/public_html"
+      
+      cd "$APPROOT" || { echo "ERRO: Não foi possível aceder a $APPROOT"; exit 1; }
+      echo "Diretório atual: $(pwd)"
       
       # Encontrar npm
       if command -v npm >/dev/null 2>&1; then
@@ -22,8 +24,17 @@ deployment:
       fi
       
       echo "Usando npm: $NPM_CMD"
-      $NPM_CMD ci
-      CI=false $NPM_CMD run build
+      "$NPM_CMD" ci || { echo "ERRO: npm ci falhou"; exit 1; }
+      CI=false "$NPM_CMD" run build || { echo "ERRO: npm run build falhou"; exit 1; }
+      
+      # Verificar se dist existe
+      if [ ! -d "dist" ]; then
+        echo "ERRO: Diretório dist não foi criado pelo build"
+        exit 1
+      fi
+      
+      echo "Conteúdo de dist:"
+      ls -la dist/ | head -20
       
       # Criar 404.html e .htaccess para SPA
       cp -f dist/index.html dist/404.html
@@ -37,8 +48,26 @@ deployment:
       
       # Publicar em public_html
       echo "Publicando em $DEPLOYPATH"
-      mkdir -p $DEPLOYPATH
-      rm -rf $DEPLOYPATH/*
-      cp -R dist/* $DEPLOYPATH/
+      mkdir -p "$DEPLOYPATH" || { echo "ERRO: Não foi possível criar $DEPLOYPATH"; exit 1; }
+      
+      # Limpar public_html (preservar .htaccess se existir)
+      if [ -f "$DEPLOYPATH/.htaccess" ]; then
+        mv "$DEPLOYPATH/.htaccess" "$DEPLOYPATH/.htaccess.backup"
+      fi
+      rm -rf "$DEPLOYPATH"/* "$DEPLOYPATH"/.[!.]* "$DEPLOYPATH"/..?* 2>/dev/null || true
+      
+      # Copiar todos os arquivos incluindo ocultos
+      echo "Copiando arquivos de dist para public_html..."
+      cp -R dist/. "$DEPLOYPATH"/ || { echo "ERRO: Falha ao copiar arquivos"; exit 1; }
+      
+      # Verificar se os arquivos foram copiados
+      echo "Arquivos em public_html:"
+      ls -la "$DEPLOYPATH" | head -20
+      
+      # Restaurar .htaccess backup se necessário
+      if [ -f "$DEPLOYPATH/.htaccess.backup" ] && [ ! -f "$DEPLOYPATH/.htaccess" ]; then
+        mv "$DEPLOYPATH/.htaccess.backup" "$DEPLOYPATH/.htaccess"
+      fi
       
       echo "==== Deploy concluído com sucesso ===="
+      echo "Total de arquivos copiados: $(find $DEPLOYPATH -type f | wc -l)"
