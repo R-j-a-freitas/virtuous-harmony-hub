@@ -1,28 +1,32 @@
 ---
 deployment:
   tasks:
-    - 'echo "==== Virtuous Ensemble: deploy iniciado ===="'
-    # caminhos absolutos (ajusta se o user/caminho for diferente)
-    - 'export APPROOT="/home/virtuou1/repositories/virtuous-harmony-hub"'
-    - 'export WEBROOT="/home/virtuou1/public_html"'
-    - 'cd "$APPROOT"'
-
-    # Descobre o npm (cPanel pode ter várias localizações)
     - |
-      if command -v npm >/dev/null 2>&1; then NPM=$(command -v npm);
-      elif [ -x /opt/cpanel/ea-nodejs20/bin/npm ]; then NPM=/opt/cpanel/ea-nodejs20/bin/npm;
-      elif [ -x /opt/cpanel/ea-nodejs18/bin/npm ]; then NPM=/opt/cpanel/ea-nodejs18/bin/npm;
-      elif [ -x /usr/local/bin/npm ]; then NPM=/usr/local/bin/npm;
-      else echo "ERRO: npm não encontrado. Vai a cPanel → Setup Node.js App e instala Node 18/20, ou usa o deploy por GitHub Actions." && exit 1; fi
-      echo "Usar npm em: $NPM"
-
-    # Instalar dependências e compilar Vite
-    - '$NPM ci'
-    - 'CI=false $NPM run build'
-
-    # SPA fallback e .htaccess para React/Vite
-    - 'cp -f dist/index.html dist/404.html'
-    - |
+      echo "==== Virtuous Ensemble: deploy iniciado ===="
+      export DEPLOYPATH=/home/virtuou1/public_html/
+      export APPROOT=/home/virtuou1/repositories/virtuous-harmony-hub
+      cd $APPROOT
+      
+      # Encontrar npm
+      if command -v npm >/dev/null 2>&1; then
+        NPM_CMD=npm
+      elif [ -x /opt/cpanel/ea-nodejs20/bin/npm ]; then
+        NPM_CMD=/opt/cpanel/ea-nodejs20/bin/npm
+      elif [ -x /opt/cpanel/ea-nodejs18/bin/npm ]; then
+        NPM_CMD=/opt/cpanel/ea-nodejs18/bin/npm
+      elif [ -x /usr/local/bin/npm ]; then
+        NPM_CMD=/usr/local/bin/npm
+      else
+        echo "ERRO: npm não encontrado. Configure Node.js no cPanel."
+        exit 1
+      fi
+      
+      echo "Usando npm: $NPM_CMD"
+      $NPM_CMD ci
+      CI=false $NPM_CMD run build
+      
+      # Criar 404.html e .htaccess para SPA
+      cp -f dist/index.html dist/404.html
       cat > dist/.htaccess << 'EOF'
       RewriteEngine On
       RewriteBase /
@@ -30,11 +34,11 @@ deployment:
       RewriteCond %{REQUEST_FILENAME} !-d
       RewriteRule . /index.html [L]
       EOF
-
-    # Publicar em public_html (limpa destino e copia tudo, incluindo ficheiros ocultos)
-    - 'echo "Publicar em $WEBROOT"'
-    - 'mkdir -p "$WEBROOT"'
-    - 'shopt -s dotglob || true'
-    - 'rm -rf "$WEBROOT"/*'
-    - 'cp -R dist/* "$WEBROOT"/'
-    - 'echo "==== Deploy concluído com sucesso ===="'
+      
+      # Publicar em public_html
+      echo "Publicando em $DEPLOYPATH"
+      mkdir -p $DEPLOYPATH
+      rm -rf $DEPLOYPATH/*
+      cp -R dist/* $DEPLOYPATH/
+      
+      echo "==== Deploy concluído com sucesso ===="
