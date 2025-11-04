@@ -36,23 +36,44 @@ deployment:
       
       if [ -n "$NPM_CMD" ]; then
         echo "Usando npm: $NPM_CMD"
-        "$NPM_CMD" ci || echo "AVISO: npm ci falhou, continuando..."
-        CI=false "$NPM_CMD" run build || echo "AVISO: npm run build falhou, continuando..."
+        echo "Instalando dependências..."
+        "$NPM_CMD" ci || { echo "ERRO: npm ci falhou"; exit 1; }
+        echo "Fazendo build do projeto..."
+        CI=false "$NPM_CMD" run build || { echo "ERRO: npm run build falhou"; exit 1; }
+        echo "Build concluído com sucesso"
+      else
+        echo "ERRO: npm não encontrado. O build é necessário para gerar os arquivos JS/CSS."
+        echo "Configure Node.js no cPanel: Setup Node.js App"
+        exit 1
       fi
       
-      # Verificar se dist existe ou criar estrutura básica
+      # Verificar se dist existe e tem arquivos necessários
       echo "--- Verificando diretório dist ---"
-      if [ -d "dist" ]; then
-        echo "Diretório dist encontrado"
-        echo "Conteúdo de dist:"
-        ls -la dist/ | head -20
-      else
-        echo "AVISO: Diretório dist não existe. Criando estrutura básica..."
-        mkdir -p dist
-        if [ -f "index.html" ]; then
-          cp index.html dist/
-          echo "Copiado index.html para dist"
-        fi
+      if [ ! -d "dist" ]; then
+        echo "ERRO: Diretório dist não foi criado pelo build"
+        exit 1
+      fi
+      
+      echo "Diretório dist encontrado"
+      echo "Conteúdo completo de dist:"
+      ls -la dist/
+      
+      # Verificar se há arquivos JS/CSS (necessários para o site funcionar)
+      JS_COUNT=$(find dist -name "*.js" 2>/dev/null | wc -l)
+      CSS_COUNT=$(find dist -name "*.css" 2>/dev/null | wc -l)
+      
+      echo "Arquivos JavaScript encontrados: $JS_COUNT"
+      echo "Arquivos CSS encontrados: $CSS_COUNT"
+      
+      if [ "$JS_COUNT" -eq 0 ]; then
+        echo "ERRO: Nenhum arquivo JavaScript foi gerado pelo build!"
+        echo "O site não funcionará sem os arquivos JS."
+        exit 1
+      fi
+      
+      if [ ! -f "dist/index.html" ]; then
+        echo "ERRO: dist/index.html não existe"
+        exit 1
       fi
       
       # Criar arquivos necessários para SPA
@@ -105,13 +126,28 @@ deployment:
       # Verificar cópia
       echo "--- Verificando arquivos copiados ---"
       echo "Arquivos em public_html:"
-      ls -la "$DEPLOYPATH" | head -30
+      ls -la "$DEPLOYPATH"
+      echo ""
+      echo "Estrutura de diretórios em public_html:"
+      find "$DEPLOYPATH" -type f | head -50
+      
       FILE_COUNT=$(find "$DEPLOYPATH" -type f | wc -l)
-      echo "Total de arquivos copiados: $FILE_COUNT"
+      JS_COUNT=$(find "$DEPLOYPATH" -name "*.js" | wc -l)
+      CSS_COUNT=$(find "$DEPLOYPATH" -name "*.css" | wc -l)
+      
+      echo ""
+      echo "Resumo da cópia:"
+      echo "  Total de arquivos: $FILE_COUNT"
+      echo "  Arquivos JavaScript: $JS_COUNT"
+      echo "  Arquivos CSS: $CSS_COUNT"
       
       if [ "$FILE_COUNT" -eq 0 ]; then
         echo "ERRO: Nenhum arquivo foi copiado!"
         exit 1
+      fi
+      
+      if [ "$JS_COUNT" -eq 0 ]; then
+        echo "AVISO: Nenhum arquivo JavaScript foi copiado. O site pode não funcionar corretamente."
       fi
       
       # Restaurar .htaccess se necessário
