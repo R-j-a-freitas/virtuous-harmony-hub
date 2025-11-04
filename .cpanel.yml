@@ -29,17 +29,42 @@ deployment:
       
       # Tentar fazer build (mas continuar mesmo se falhar)
       log "--- Tentando fazer build do projeto ---"
-      if command -v npm >/dev/null 2>&1; then
-        NPM_CMD=npm
-      elif [ -x /opt/cpanel/ea-nodejs20/bin/npm ]; then
-        NPM_CMD=/opt/cpanel/ea-nodejs20/bin/npm
-      elif [ -x /opt/cpanel/ea-nodejs18/bin/npm ]; then
-        NPM_CMD=/opt/cpanel/ea-nodejs18/bin/npm
-      elif [ -x /usr/local/bin/npm ]; then
-        NPM_CMD=/usr/local/bin/npm
-      else
-        echo "AVISO: npm não encontrado. Tentando copiar arquivos existentes..."
-        NPM_CMD=""
+      log "Procurando npm em várias localizações..."
+      
+      # Lista de possíveis localizações do npm no cPanel
+      NPM_PATHS=(
+        "$(command -v npm 2>/dev/null)"
+        "/opt/cpanel/ea-nodejs20/bin/npm"
+        "/opt/cpanel/ea-nodejs18/bin/npm"
+        "/opt/cpanel/ea-nodejs16/bin/npm"
+        "/usr/local/bin/npm"
+        "/usr/bin/npm"
+        "/home/virtuou1/nodevenv/*/bin/npm"
+        "$HOME/.nvm/versions/node/*/bin/npm"
+      )
+      
+      NPM_CMD=""
+      for npm_path in "${NPM_PATHS[@]}"; do
+        # Expandir wildcards
+        for expanded_path in $npm_path; do
+          if [ -x "$expanded_path" ] 2>/dev/null; then
+            NPM_CMD="$expanded_path"
+            log "npm encontrado em: $NPM_CMD"
+            break 2
+          fi
+        done
+      done
+      
+      if [ -z "$NPM_CMD" ]; then
+        log "npm não encontrado em nenhuma localização padrão"
+        log "Verificando se há Node.js instalado mas não acessível..."
+        
+        # Verificar se há Node.js instalado via cPanel mas não no PATH
+        if [ -d "/opt/cpanel/ea-nodejs20" ]; then
+          log "Node.js 20 encontrado em /opt/cpanel/ea-nodejs20 mas npm não acessível"
+        elif [ -d "/opt/cpanel/ea-nodejs18" ]; then
+          log "Node.js 18 encontrado em /opt/cpanel/ea-nodejs18 mas npm não acessível"
+        fi
       fi
       
       if [ -n "$NPM_CMD" ]; then
@@ -58,15 +83,33 @@ deployment:
         log "O build é necessário para gerar os arquivos JS/CSS."
         log ""
         log "INSTRUÇÕES PARA INSTALAR NODE.JS NO CPANEL:"
-        log "1. No cPanel, procure por 'Setup Node.js App' ou 'Node.js Selector'"
-        log "2. Se não encontrar, procure na secção 'Software' ou 'Advanced'"
-        log "3. Clique em 'Create Application'"
-        log "4. Escolha Node.js 18 ou 20"
-        log "5. Após criar, o npm ficará disponível em:"
+        log ""
+        log "OPÇÃO 1 - Setup Node.js App (Interface do Usuário):"
+        log "1. No cPanel, procure na barra de pesquisa (topo): 'Setup Node.js App'"
+        log "2. Ou procure em: 'Software' → 'Setup Node.js App'"
+        log "3. Ou procure em: 'Advanced' → 'Setup Node.js App'"
+        log "4. Clique em 'Create Application'"
+        log "5. Configure:"
+        log "   - Node.js Version: escolha 18 ou 20"
+        log "   - Application Root: /home/virtuou1/repositories/virtuous-harmony-hub"
+        log "   - Application URL: (deixe em branco ou use um subdomínio)"
+        log "   - Application Startup File: (não necessário para build)"
+        log "6. Clique em 'Create'"
+        log ""
+        log "OPÇÃO 2 - Via WHM (se tiver acesso root):"
+        log "1. Acesse o WHM (Web Host Manager)"
+        log "2. Vá em: 'Software' → 'EasyApache 4'"
+        log "3. Clique em 'Customize'"
+        log "4. Na secção 'Additional Packages', selecione 'ea-nodejs18' ou 'ea-nodejs20'"
+        log "5. Clique em 'Next' e depois 'Provision'"
+        log ""
+        log "OPÇÃO 3 - Contactar Suporte:"
+        log "Se não encontrar 'Setup Node.js App', contacte o suporte do hosting"
+        log "e peça para instalar Node.js 18 ou 20 no servidor."
+        log ""
+        log "Após instalar, o npm ficará disponível em:"
         log "   /opt/cpanel/ea-nodejs18/bin/npm ou"
         log "   /opt/cpanel/ea-nodejs20/bin/npm"
-        log ""
-        log "ALTERNATIVA: Contacte o suporte do seu hosting para instalar Node.js"
         log ""
         log "Este log foi salvo em: $LOGFILE"
         log "=========================================="
