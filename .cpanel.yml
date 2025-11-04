@@ -1,18 +1,40 @@
 ---
 deployment:
   tasks:
-    # Define o caminho de deployment (ajuste conforme necessário)
-    - export DEPLOYPATH=/home/$USER/public_html/
-    
-    # Instala as dependências do Node.js
-    - npm install
-    
-    # Executa o build do projeto Vite
-    - npm run build
-    
-    # Copia todos os arquivos da pasta dist para public_html
-    - /bin/cp -R dist/* $DEPLOYPATH
-    
-    # Copia arquivos ocultos importantes (como .htaccess) se existirem
-    - if [ -f dist/.htaccess ]; then /bin/cp dist/.htaccess $DEPLOYPATH; fi
+    - 'echo "==== Virtuous Ensemble: deploy iniciado ===="'
+    # caminhos absolutos (ajusta se o user/caminho for diferente)
+    - 'export APPROOT="/home/virtuou1/repositories/virtuous-harmony-hub"'
+    - 'export WEBROOT="/home/virtuou1/public_html"'
+    - 'cd "$APPROOT"'
 
+    # Descobre o npm (cPanel pode ter várias localizações)
+    - |
+      if command -v npm >/dev/null 2>&1; then NPM=$(command -v npm);
+      elif [ -x /opt/cpanel/ea-nodejs20/bin/npm ]; then NPM=/opt/cpanel/ea-nodejs20/bin/npm;
+      elif [ -x /opt/cpanel/ea-nodejs18/bin/npm ]; then NPM=/opt/cpanel/ea-nodejs18/bin/npm;
+      elif [ -x /usr/local/bin/npm ]; then NPM=/usr/local/bin/npm;
+      else echo "ERRO: npm não encontrado. Vai a cPanel → Setup Node.js App e instala Node 18/20, ou usa o deploy por GitHub Actions." && exit 1; fi
+      echo "Usar npm em: $NPM"
+
+    # Instalar dependências e compilar Vite
+    - '$NPM ci'
+    - 'CI=false $NPM run build'
+
+    # SPA fallback e .htaccess para React/Vite
+    - 'cp -f dist/index.html dist/404.html'
+    - |
+      cat > dist/.htaccess << 'EOF'
+      RewriteEngine On
+      RewriteBase /
+      RewriteCond %{REQUEST_FILENAME} !-f
+      RewriteCond %{REQUEST_FILENAME} !-d
+      RewriteRule . /index.html [L]
+      EOF
+
+    # Publicar em public_html (limpa destino e copia tudo, incluindo ficheiros ocultos)
+    - 'echo "Publicar em $WEBROOT"'
+    - 'mkdir -p "$WEBROOT"'
+    - 'shopt -s dotglob || true'
+    - 'rm -rf "$WEBROOT"/*'
+    - 'cp -R dist/* "$WEBROOT"/'
+    - 'echo "==== Deploy concluído com sucesso ===="'
