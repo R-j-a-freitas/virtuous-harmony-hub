@@ -2,25 +2,33 @@
 deployment:
   tasks:
     - |
-      echo "==== Virtuous Ensemble: deploy iniciado ===="
-      
       APPROOT="/home/virtuou1/repositories/virtuous-harmony-hub"
       DEPLOYPATH="/home/virtuou1/public_html"
+      LOGFILE="$DEPLOYPATH/deploy_log.txt"
       
-      echo "APPROOT: $APPROOT"
-      echo "DEPLOYPATH: $DEPLOYPATH"
+      # Função para log (salva no arquivo e mostra no ecrã)
+      log() {
+        echo "$1" | tee -a "$LOGFILE"
+      }
+      
+      log "==== Virtuous Ensemble: deploy iniciado ===="
+      log "APPROOT: $APPROOT"
+      log "DEPLOYPATH: $DEPLOYPATH"
+      log "LOGFILE: $LOGFILE"
+      log "Data/Hora: $(date)"
+      log ""
       
       # Verificar se o diretório do repositório existe
       if [ ! -d "$APPROOT" ]; then
-        echo "ERRO: Diretório $APPROOT não existe"
+        log "ERRO: Diretório $APPROOT não existe" | tee -a "$LOGFILE"
         exit 1
       fi
       
-      cd "$APPROOT" || { echo "ERRO: Não foi possível aceder a $APPROOT"; exit 1; }
-      echo "Diretório atual: $(pwd)"
+      cd "$APPROOT" || { log "ERRO: Não foi possível aceder a $APPROOT" | tee -a "$LOGFILE"; exit 1; }
+      log "Diretório atual: $(pwd)"
       
       # Tentar fazer build (mas continuar mesmo se falhar)
-      echo "--- Tentando fazer build do projeto ---"
+      log "--- Tentando fazer build do projeto ---"
       if command -v npm >/dev/null 2>&1; then
         NPM_CMD=npm
       elif [ -x /opt/cpanel/ea-nodejs20/bin/npm ]; then
@@ -35,51 +43,69 @@ deployment:
       fi
       
       if [ -n "$NPM_CMD" ]; then
-        echo "Usando npm: $NPM_CMD"
-        echo "Instalando dependências..."
-        "$NPM_CMD" ci || { echo "ERRO: npm ci falhou"; exit 1; }
-        echo "Fazendo build do projeto..."
-        CI=false "$NPM_CMD" run build || { echo "ERRO: npm run build falhou"; exit 1; }
-        echo "Build concluído com sucesso"
+        log "Usando npm: $NPM_CMD"
+        log "Instalando dependências..."
+        "$NPM_CMD" ci 2>&1 | tee -a "$LOGFILE" || { log "ERRO: npm ci falhou"; exit 1; }
+        log "Fazendo build do projeto..."
+        CI=false "$NPM_CMD" run build 2>&1 | tee -a "$LOGFILE" || { log "ERRO: npm run build falhou"; exit 1; }
+        log "Build concluído com sucesso"
       else
-        echo "ERRO: npm não encontrado. O build é necessário para gerar os arquivos JS/CSS."
-        echo "Configure Node.js no cPanel: Setup Node.js App"
+        log ""
+        log "=========================================="
+        log "ERRO: npm não encontrado!"
+        log "=========================================="
+        log ""
+        log "O build é necessário para gerar os arquivos JS/CSS."
+        log ""
+        log "INSTRUÇÕES PARA INSTALAR NODE.JS NO CPANEL:"
+        log "1. No cPanel, procure por 'Setup Node.js App' ou 'Node.js Selector'"
+        log "2. Se não encontrar, procure na secção 'Software' ou 'Advanced'"
+        log "3. Clique em 'Create Application'"
+        log "4. Escolha Node.js 18 ou 20"
+        log "5. Após criar, o npm ficará disponível em:"
+        log "   /opt/cpanel/ea-nodejs18/bin/npm ou"
+        log "   /opt/cpanel/ea-nodejs20/bin/npm"
+        log ""
+        log "ALTERNATIVA: Contacte o suporte do seu hosting para instalar Node.js"
+        log ""
+        log "Este log foi salvo em: $LOGFILE"
+        log "=========================================="
         exit 1
       fi
       
       # Verificar se dist existe e tem arquivos necessários
-      echo "--- Verificando diretório dist ---"
+      log "--- Verificando diretório dist ---"
       if [ ! -d "dist" ]; then
-        echo "ERRO: Diretório dist não foi criado pelo build"
+        log "ERRO: Diretório dist não foi criado pelo build" | tee -a "$LOGFILE"
         exit 1
       fi
       
-      echo "Diretório dist encontrado"
-      echo "Conteúdo completo de dist:"
-      ls -la dist/
+      log "Diretório dist encontrado"
+      log "Conteúdo completo de dist:"
+      ls -la dist/ | tee -a "$LOGFILE"
       
       # Verificar se há arquivos JS/CSS (necessários para o site funcionar)
       JS_COUNT=$(find dist -name "*.js" 2>/dev/null | wc -l)
       CSS_COUNT=$(find dist -name "*.css" 2>/dev/null | wc -l)
       
-      echo "Arquivos JavaScript encontrados: $JS_COUNT"
-      echo "Arquivos CSS encontrados: $CSS_COUNT"
+      log "Arquivos JavaScript encontrados: $JS_COUNT"
+      log "Arquivos CSS encontrados: $CSS_COUNT"
       
       if [ "$JS_COUNT" -eq 0 ]; then
-        echo "ERRO: Nenhum arquivo JavaScript foi gerado pelo build!"
-        echo "O site não funcionará sem os arquivos JS."
+        log "ERRO: Nenhum arquivo JavaScript foi gerado pelo build!" | tee -a "$LOGFILE"
+        log "O site não funcionará sem os arquivos JS." | tee -a "$LOGFILE"
         exit 1
       fi
       
       if [ ! -f "dist/index.html" ]; then
-        echo "ERRO: dist/index.html não existe"
+        log "ERRO: dist/index.html não existe" | tee -a "$LOGFILE"
         exit 1
       fi
       
       # Criar arquivos necessários para SPA
       if [ -f "dist/index.html" ]; then
         cp -f dist/index.html dist/404.html 2>/dev/null || true
-        echo "Criado 404.html"
+        log "Criado 404.html"
       fi
       
       # Criar .htaccess
@@ -90,64 +116,72 @@ deployment:
       RewriteCond %{REQUEST_FILENAME} !-d
       RewriteRule . /index.html [L]
       EOF
-      echo "Criado .htaccess"
+      log "Criado .htaccess"
       
       # Verificar permissões de escrita em public_html
-      echo "--- Verificando permissões e preparando public_html ---"
+      log "--- Verificando permissões e preparando public_html ---"
       if [ ! -d "$DEPLOYPATH" ]; then
-        echo "Criando diretório $DEPLOYPATH"
-        mkdir -p "$DEPLOYPATH" || { echo "ERRO: Não foi possível criar $DEPLOYPATH"; exit 1; }
+        log "Criando diretório $DEPLOYPATH"
+        mkdir -p "$DEPLOYPATH" || { log "ERRO: Não foi possível criar $DEPLOYPATH" | tee -a "$LOGFILE"; exit 1; }
       fi
       
       # Testar escrita
-      touch "$DEPLOYPATH/.write_test" 2>/dev/null && rm -f "$DEPLOYPATH/.write_test" && echo "Permissões de escrita OK" || { echo "ERRO: Sem permissão de escrita em $DEPLOYPATH"; exit 1; }
+      touch "$DEPLOYPATH/.write_test" 2>/dev/null && rm -f "$DEPLOYPATH/.write_test" && log "Permissões de escrita OK" || { log "ERRO: Sem permissão de escrita em $DEPLOYPATH" | tee -a "$LOGFILE"; exit 1; }
       
-      # Limpar public_html
-      echo "--- Limpando public_html ---"
+      # Limpar public_html (mas preservar o log)
+      log "--- Limpando public_html ---"
       if [ -f "$DEPLOYPATH/.htaccess" ]; then
         mv "$DEPLOYPATH/.htaccess" "$DEPLOYPATH/.htaccess.backup"
+      fi
+      # Não remover o deploy_log.txt se existir
+      if [ -f "$LOGFILE" ]; then
+        mv "$LOGFILE" "$LOGFILE.old"
       fi
       rm -rf "$DEPLOYPATH"/* 2>/dev/null || true
       rm -rf "$DEPLOYPATH"/.[!.]* 2>/dev/null || true
       rm -rf "$DEPLOYPATH"/..?* 2>/dev/null || true
-      echo "public_html limpo"
+      # Restaurar o log antigo se existir
+      if [ -f "$LOGFILE.old" ]; then
+        mv "$LOGFILE.old" "$LOGFILE"
+      fi
+      log "public_html limpo"
       
       # Copiar arquivos
-      echo "--- Copiando arquivos de dist para public_html ---"
+      log "--- Copiando arquivos de dist para public_html ---"
       if [ -d "dist" ] && [ "$(ls -A dist 2>/dev/null)" ]; then
-        echo "Copiando conteúdo de dist..."
-        /bin/cp -R dist/. "$DEPLOYPATH"/ || { echo "ERRO: Falha ao copiar arquivos"; exit 1; }
-        echo "Arquivos copiados com sucesso"
+        log "Copiando conteúdo de dist..."
+        /bin/cp -R dist/. "$DEPLOYPATH"/ 2>&1 | tee -a "$LOGFILE" || { log "ERRO: Falha ao copiar arquivos" | tee -a "$LOGFILE"; exit 1; }
+        log "Arquivos copiados com sucesso"
       else
-        echo "ERRO: Diretório dist está vazio ou não existe"
+        log "ERRO: Diretório dist está vazio ou não existe" | tee -a "$LOGFILE"
         exit 1
       fi
       
       # Verificar cópia
-      echo "--- Verificando arquivos copiados ---"
-      echo "Arquivos em public_html:"
-      ls -la "$DEPLOYPATH"
-      echo ""
-      echo "Estrutura de diretórios em public_html:"
-      find "$DEPLOYPATH" -type f | head -50
+      log "--- Verificando arquivos copiados ---"
+      log "Arquivos em public_html:"
+      ls -la "$DEPLOYPATH" | tee -a "$LOGFILE"
+      log ""
+      log "Estrutura de diretórios em public_html:"
+      find "$DEPLOYPATH" -type f | head -50 | tee -a "$LOGFILE"
       
       FILE_COUNT=$(find "$DEPLOYPATH" -type f | wc -l)
       JS_COUNT=$(find "$DEPLOYPATH" -name "*.js" | wc -l)
       CSS_COUNT=$(find "$DEPLOYPATH" -name "*.css" | wc -l)
       
-      echo ""
-      echo "Resumo da cópia:"
-      echo "  Total de arquivos: $FILE_COUNT"
-      echo "  Arquivos JavaScript: $JS_COUNT"
-      echo "  Arquivos CSS: $CSS_COUNT"
+      log ""
+      log "Resumo da cópia:"
+      log "  Total de arquivos: $FILE_COUNT"
+      log "  Arquivos JavaScript: $JS_COUNT"
+      log "  Arquivos CSS: $CSS_COUNT"
       
       if [ "$FILE_COUNT" -eq 0 ]; then
-        echo "ERRO: Nenhum arquivo foi copiado!"
+        log "ERRO: Nenhum arquivo foi copiado!" | tee -a "$LOGFILE"
         exit 1
       fi
       
       if [ "$JS_COUNT" -eq 0 ]; then
-        echo "AVISO: Nenhum arquivo JavaScript foi copiado. O site pode não funcionar corretamente."
+        log "AVISO: Nenhum arquivo JavaScript foi copiado. O site pode não funcionar corretamente." | tee -a "$LOGFILE"
       fi
       
       # Restaurar .htaccess se necessário
@@ -155,4 +189,10 @@ deployment:
         mv "$DEPLOYPATH/.htaccess.backup" "$DEPLOYPATH/.htaccess"
       fi
       
-      echo "==== Deploy concluído com sucesso ===="
+      log "==== Deploy concluído com sucesso ===="
+      log ""
+      log "=========================================="
+      log "LOG COMPLETO SALVO EM: $LOGFILE"
+      log "Pode aceder ao log através do File Manager:"
+      log "  File Manager → public_html → deploy_log.txt"
+      log "=========================================="
