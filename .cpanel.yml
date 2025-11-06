@@ -27,6 +27,15 @@ deployment:
       cd "$APPROOT" || { log "ERRO: Não foi possível aceder a $APPROOT" | tee -a "$LOGFILE"; exit 1; }
       log "Diretório atual: $(pwd)"
       
+      # Remover arquivos não rastreados que podem causar conflito no merge
+      log "--- Verificando e removendo arquivos conflitantes ---"
+      if [ -f "app.js" ] && ! git ls-files --error-unmatch app.js >/dev/null 2>&1; then
+        log "Removendo app.js não rastreado (será substituído pela versão do repositório)"
+        rm -f app.js || true
+      fi
+      log "Limpeza de arquivos conflitantes concluída"
+      log ""
+      
       # Tentar fazer build (mas continuar mesmo se falhar)
       log "--- Tentando fazer build do projeto ---"
       log "Procurando npm em várias localizações..."
