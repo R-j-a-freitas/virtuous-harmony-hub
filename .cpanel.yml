@@ -31,29 +31,74 @@ deployment:
       log "--- Tentando fazer build do projeto ---"
       log "Procurando npm em várias localizações..."
       
-      # Lista de possíveis localizações do npm no cPanel
+      # Primeiro, tentar encontrar o ambiente virtual do Node.js criado pelo cPanel
+      # O cPanel cria ambientes em: /home/USER/nodevenv/APP_ROOT/VERSION/bin/npm
+      NODEVENV_BASE="/home/virtuou2/nodevenv/repositories/virtuous-harmony-hub"
+      
+      # Lista de possíveis localizações do npm no cPanel (prioridade: ambiente virtual > sistema)
       NPM_PATHS=(
+        # Ambiente virtual do cPanel (versões mais recentes primeiro)
+        "$NODEVENV_BASE/20/bin/npm"
+        "$NODEVENV_BASE/18/bin/npm"
+        "$NODEVENV_BASE/16/bin/npm"
+        "$NODEVENV_BASE/*/bin/npm"
+        # Sistema global
         "$(command -v npm 2>/dev/null)"
         "/opt/cpanel/ea-nodejs20/bin/npm"
         "/opt/cpanel/ea-nodejs18/bin/npm"
         "/opt/cpanel/ea-nodejs16/bin/npm"
         "/usr/local/bin/npm"
         "/usr/bin/npm"
-        "/home/virtuou2/nodevenv/*/bin/npm"
         "$HOME/.nvm/versions/node/*/bin/npm"
       )
       
       NPM_CMD=""
+      NODE_VERSION=""
       for npm_path in "${NPM_PATHS[@]}"; do
         # Expandir wildcards
         for expanded_path in $npm_path; do
           if [ -x "$expanded_path" ] 2>/dev/null; then
             NPM_CMD="$expanded_path"
+            # Tentar obter a versão do Node.js
+            NODE_BIN="$(dirname "$NPM_CMD")/node"
+            if [ -x "$NODE_BIN" ]; then
+              NODE_VERSION="$($NODE_BIN --version 2>/dev/null || echo 'unknown')"
+            fi
             log "npm encontrado em: $NPM_CMD"
+            log "Versão do Node.js: $NODE_VERSION"
             break 2
           fi
         done
       done
+      
+      # Verificar se a versão do Node.js é compatível (Vite 5 requer Node.js 18+)
+      if [ -n "$NODE_VERSION" ]; then
+        MAJOR_VERSION=$(echo "$NODE_VERSION" | cut -d. -f1 | sed 's/v//')
+        if [ "$MAJOR_VERSION" -lt 18 ] 2>/dev/null; then
+          log ""
+          log "=========================================="
+          log "ERRO: Versão do Node.js incompatível!"
+          log "=========================================="
+          log ""
+          log "Versão encontrada: Node.js $NODE_VERSION"
+          log "Versão necessária: Node.js 18 ou superior"
+          log ""
+          log "O Vite 5.4.19 requer Node.js 18+ para funcionar."
+          log ""
+          log "SOLUÇÃO: Atualizar a versão do Node.js no cPanel"
+          log ""
+          log "1. No cPanel, vá para 'Setup Node.js App'"
+          log "2. Clique na sua aplicação (virtuousensemble.pt)"
+          log "3. No campo 'Node.js version', mude de '10.24.1' para '18.x' ou '20.x'"
+          log "4. Clique em 'SAVE'"
+          log "5. Aguarde alguns segundos para o ambiente ser recriado"
+          log "6. Execute o deploy novamente"
+          log ""
+          log "Este log foi salvo em: $LOGFILE"
+          log "=========================================="
+          exit 1
+        fi
+      fi
       
       if [ -z "$NPM_CMD" ]; then
         log "npm não encontrado em nenhuma localização padrão"
