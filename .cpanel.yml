@@ -2,8 +2,8 @@
 deployment:
   tasks:
     - |
-      APPROOT="/home/virtuou1/repositories/virtuous-harmony-hub"
-      DEPLOYPATH="/home/virtuou1/public_html"
+      APPROOT="/home/virtuou2/repositories/virtuous-harmony-hub"
+      DEPLOYPATH="/home/virtuou2/public_html"
       LOGFILE="$DEPLOYPATH/deploy_log.txt"
       
       # Função para log (salva no arquivo e mostra no ecrã)
@@ -39,7 +39,7 @@ deployment:
         "/opt/cpanel/ea-nodejs16/bin/npm"
         "/usr/local/bin/npm"
         "/usr/bin/npm"
-        "/home/virtuou1/nodevenv/*/bin/npm"
+        "/home/virtuou2/nodevenv/*/bin/npm"
         "$HOME/.nvm/versions/node/*/bin/npm"
       )
       
@@ -91,7 +91,7 @@ deployment:
         log "4. Clique em 'Create Application'"
         log "5. Configure:"
         log "   - Node.js Version: escolha 18 ou 20"
-        log "   - Application Root: /home/virtuou1/repositories/virtuous-harmony-hub"
+        log "   - Application Root: /home/virtuou2/repositories/virtuous-harmony-hub"
         log "   - Application URL: (deixe em branco ou use um subdomínio)"
         log "   - Application Startup File: (não necessário para build)"
         log "6. Clique em 'Create'"
