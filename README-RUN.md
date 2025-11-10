@@ -62,3 +62,5 @@ npm install
 ### Erro: "Porta 8080 já em uso"
 Altere a porta no `vite.config.ts` ou feche o processo que está usando a porta.
 
+
+
