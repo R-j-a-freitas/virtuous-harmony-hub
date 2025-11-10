@@ -4,11 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "start": "node server.js",
+    "lint": "npx eslint .",
+    "preview": "npx vite preview",
+    "install-deps": "npm install",
+    "postinstall": "echo 'Dependências instaladas com sucesso'"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

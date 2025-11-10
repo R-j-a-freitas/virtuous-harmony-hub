@@ -1,0 +1,13 @@
+name: Deploy to cPanel via Git
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment handled by cPanel
+        run: echo "Deployment handled by cPanel on git pull. The .cpanel.yml will execute automatically."
+
