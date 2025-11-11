@@ -2,6 +2,9 @@
 deployment:
   tasks:
     - export APPROOT=/home/virtuou2/repositories/virtuous-harmony-hub
-    - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npm ci --include=dev"
-    - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npx vite build"
+    # Nota: Build é feito localmente devido a limitações de memória LVE no servidor
+    # Instalar apenas dependências de produção (server.js precisa do express)
+    - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npm ci --production"
+    # Verificar se dist/ existe (deve ser feito upload manualmente após build local)
+    - /bin/bash -lc "cd $APPROOT && if [ ! -d 'dist' ]; then echo 'AVISO: dist/ nao encontrada. Faca upload da pasta dist/ apos build local.'; exit 1; fi"
     - /bin/bash -lc "mkdir -p $APPROOT/tmp && touch $APPROOT/tmp/restart.txt"
