@@ -13,5 +13,7 @@ deployment:
     - /bin/bash -lc "cd $APPROOT && ln -sf $NODEVENV/lib/node_modules node_modules && echo 'Symlink node_modules criado'"
     # Verificar se dist/ existe (deve ser feito upload manualmente após build local)
     - /bin/bash -lc "cd $APPROOT && if [ ! -d 'dist' ] || [ ! -f 'dist/index.html' ]; then echo 'ERRO: dist/ nao encontrada ou vazia. Faca build localmente e upload da pasta dist/.'; exit 1; else echo 'OK: dist/ encontrada com sucesso.'; fi"
+    # Copiar arquivos de dist/ para public_html
+    - /bin/bash -lc "cd $APPROOT && DEPLOYPATH=/home/virtuou2/public_html && rm -rf \$DEPLOYPATH/* \$DEPLOYPATH/.[!.]* \$DEPLOYPATH/..?* 2>/dev/null || true && cp -R dist/. \$DEPLOYPATH/ && echo 'Arquivos copiados para public_html'"
     # Reiniciar Passenger
     - /bin/bash -lc "mkdir -p $APPROOT/tmp && touch $APPROOT/tmp/restart.txt && echo 'Passenger reiniciado'"
