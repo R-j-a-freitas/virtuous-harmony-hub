@@ -3,5 +3,5 @@ deployment:
   tasks:
     - export APPROOT=/home/virtuou2/repositories/virtuous-harmony-hub
     - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npm ci --include=dev"
-    - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npm run build"
+    - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npx vite build"
     - /bin/bash -lc "mkdir -p $APPROOT/tmp && touch $APPROOT/tmp/restart.txt"
