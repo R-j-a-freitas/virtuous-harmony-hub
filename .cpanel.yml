@@ -2,9 +2,11 @@
 deployment:
   tasks:
     - export APPROOT=/home/virtuou2/repositories/virtuous-harmony-hub
-    # Nota: Build é feito localmente devido a limitações de memória LVE no servidor
+    # IMPORTANTE: Build é feito LOCALMENTE devido a limitações de memória LVE no servidor
+    # NÃO tentar fazer build no servidor - sempre falha com erro de memória WebAssembly
     # Instalar apenas dependências de produção (server.js precisa do express)
     - /bin/bash -lc "cd $APPROOT && source /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/bin/activate && npm ci --production"
     # Verificar se dist/ existe (deve ser feito upload manualmente após build local)
-    - /bin/bash -lc "cd $APPROOT && if [ ! -d 'dist' ]; then echo 'AVISO: dist/ nao encontrada. Faca upload da pasta dist/ apos build local.'; exit 1; fi"
-    - /bin/bash -lc "mkdir -p $APPROOT/tmp && touch $APPROOT/tmp/restart.txt"
+    - /bin/bash -lc "cd $APPROOT && if [ ! -d 'dist' ] || [ ! -f 'dist/index.html' ]; then echo 'ERRO: dist/ nao encontrada ou vazia. Faca build localmente e upload da pasta dist/.'; exit 1; else echo 'OK: dist/ encontrada com sucesso.'; fi"
+    # Reiniciar Passenger
+    - /bin/bash -lc "mkdir -p $APPROOT/tmp && touch $APPROOT/tmp/restart.txt && echo 'Passenger reiniciado'"
