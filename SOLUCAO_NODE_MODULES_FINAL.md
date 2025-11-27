@@ -200,3 +200,4 @@ node -e "require('express')"
 3. Criar symlink apontando para o ambiente virtual
 4. Verificar
 
+

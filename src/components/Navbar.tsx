@@ -28,9 +28,9 @@ const Navbar = () => {
         isScrolled ? "bg-background/95 backdrop-blur-md border-b border-border" : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <img src={logo} alt="Virtuous Ensemble" className="h-12 md:h-16 w-auto" />
+          <img src={logo} alt="Virtuous Ensemble" className="h-16 sm:h-20 md:h-16 w-auto max-w-[180px] sm:max-w-[220px] md:max-w-none object-contain" />
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
@@ -66,7 +66,7 @@ const Navbar = () => {
             </button>
             <button
               onClick={() => scrollToSection("contact")}
-              className="bg-primary text-primary-foreground px-6 py-2 rounded-full hover:bg-primary/90 transition-all font-sans font-medium"
+              className="bg-primary text-primary-foreground px-6 py-2 md:px-6 md:py-2 rounded-full hover:bg-primary/90 transition-all font-sans font-medium w-fit md:w-auto text-left md:text-center"
             >
               Contacto
             </button>
@@ -74,7 +74,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground"
+            className="md:hidden text-foreground mr-[50px] md:mr-0"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -117,7 +117,7 @@ const Navbar = () => {
               </button>
               <button
                 onClick={() => scrollToSection("contact")}
-                className="bg-primary text-primary-foreground px-6 py-2 rounded-full hover:bg-primary/90 transition-all font-sans font-medium text-center"
+                className="bg-primary text-primary-foreground px-3 py-1 rounded-full hover:bg-primary/90 transition-all font-sans font-medium text-left w-fit"
               >
                 Contacto
               </button>

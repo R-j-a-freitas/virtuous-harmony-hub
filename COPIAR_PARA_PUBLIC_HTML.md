@@ -62,3 +62,4 @@ ls -la /home/virtuou2/public_html/.htaccess
 
 Com o `.cpanel.yml` atualizado, os arquivos serão copiados automaticamente para `public_html` sempre que você fizer deploy via Git Version Control.
 
+

@@ -56,9 +56,9 @@ const TimePicker: React.FC<TimePickerProps> = ({
           type="number"
           min="0"
           max="23"
-          value={isNaN(hours) ? '' : hours}
+          value={isNaN(hours) ? '' : String(hours).padStart(2, '0')}
           onChange={handleHoursChange}
-          placeholder="HH"
+          placeholder="00"
           required={required}
           className="w-16 text-center"
         />
@@ -68,9 +68,9 @@ const TimePicker: React.FC<TimePickerProps> = ({
           type="number"
           min="0"
           max="59"
-          value={isNaN(minutes) ? '' : minutes}
+          value={isNaN(minutes) ? '' : String(minutes).padStart(2, '0')}
           onChange={handleMinutesChange}
-          placeholder="MM"
+          placeholder="00"
           required={required}
           className="w-16 text-center"
         />

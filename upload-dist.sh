@@ -51,3 +51,4 @@ echo ""
 echo "Verifique o site em: https://virtuousensemble.pt"
 echo "Health check: curl https://virtuousensemble.pt/__health"
 
+

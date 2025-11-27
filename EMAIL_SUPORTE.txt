@@ -1,0 +1,68 @@
+Assunto: Problema com Build de Aplicação Node.js/Vite - Limites LVE CloudLinux
+
+Prezado Suporte Técnico,
+
+Venho por este meio solicitar assistência urgente para resolver um problema que estou a enfrentar ao tentar fazer o deploy de uma aplicação React/Vite no servidor.
+
+PROBLEMA:
+Estou a tentar fazer o build de uma aplicação Vite (versão 5.4.19) usando Node.js 18.20.8 através do cPanel "Setup Node.js App", mas estou a receber um erro de memória WebAssembly relacionado com os limites LVE do CloudLinux:
+
+```
+[RangeError: WebAssembly.instantiate(): Out of memory: wasm memory]
+
+Out of memory error may be caused by hitting LVE limits
+or "Max data size", "Max address space" or "Max resident set" process limits
+```
+
+LIMITES ATUAIS (conforme /proc/[PID]/limits):
+- Max resident set: 4294967296 bytes (4GB)
+- Max address space: 4294967296 bytes (4GB)
+
+DETALHES TÉCNICOS:
+- Servidor: cPanel com CloudLinux NodeJS Selector
+- Node.js: Versão 18.20.8 (configurado via Setup Node.js App)
+- Aplicação: React + Vite + TypeScript
+- Diretório: /home/virtuou2/repositories/virtuous-harmony-hub
+- Ambiente Virtual: /home/virtuou2/nodevenv/repositories/virtuous-harmony-hub/18/
+- Conta: virtuou2
+- Domínio: virtuousensemble.pt
+
+O QUE JÁ TENTEI:
+1. ✅ Instalei Node.js 18.20.8 via Setup Node.js App
+2. ✅ Executei `npm install` e `npm ci` - dependências instaladas corretamente
+3. ✅ Verifiquei que o package-lock.json está presente
+4. ❌ Tentei aumentar memória com NODE_OPTIONS="--max-old-space-size=4096" - sem sucesso
+5. ❌ Tentei usar `npx vite build` e `npm run build` - mesmo erro de memória WebAssembly
+6. ❌ O erro indica claramente que é um problema de limites LVE do CloudLinux
+
+OBSERVAÇÕES ADICIONAIS:
+- O disco está 95% cheio (60GB disponíveis de 1.1TB) - pode estar a agravar o problema
+- O CloudLinux NodeJS Selector está a usar um ambiente virtual com symlink para node_modules
+- O vite está listado no package.json como devDependency mas o build falha por limites de memória
+
+PEDIDO DE AJUDA:
+Gostaria de saber se é possível:
+1. Aumentar os limites LVE para a conta virtuou2, especificamente:
+   - Max resident set (atualmente 4GB)
+   - Max address space (atualmente 4GB)
+   - Estes limites parecem estar a impedir o Vite de compilar a aplicação
+
+2. Verificar se há alguma configuração do CloudLinux que possa ser ajustada para permitir o build do Vite
+
+3. Verificar se o espaço em disco (95% cheio) pode estar a causar problemas adicionais
+
+4. Obter orientação sobre a melhor forma de fazer o build desta aplicação no ambiente, ou se devo fazer o build localmente e apenas fazer upload dos arquivos compilados
+
+INFORMAÇÕES ADICIONAIS:
+- Aplicação Node.js: virtuous-harmony-hub (virtuousensemble.pt)
+- Comando que falha: `npm run build` ou `npx vite build`
+- Erro completo disponível nos logs do processo
+
+Agradeço desde já a vossa atenção urgente a este problema, pois está a impedir o deploy da aplicação.
+
+Com os melhores cumprimentos,
+[Seu Nome]
+
+
+
+

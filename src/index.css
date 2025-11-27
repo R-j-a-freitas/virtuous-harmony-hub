@@ -62,3 +62,29 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .hero-bg-mobile {
+    background-position: center center;
+    background-repeat: no-repeat;
+  }
+  
+  /* Mobile: ajustar tamanho para mostrar logo completo e preencher altura */
+  @media (max-width: 767px) {
+    .hero-bg-mobile {
+      background-size: 180% 80%;
+      height: 80vh;
+      min-height: 80vh;
+      background-position: center top;
+    }
+  }
+  
+  /* Desktop: usar cover normalmente */
+  @media (min-width: 768px) {
+    .hero-bg-mobile {
+      background-size: cover;
+      height: 100vh;
+      min-height: 100vh;
+    }
+  }
+}

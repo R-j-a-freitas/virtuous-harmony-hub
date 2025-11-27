@@ -129,3 +129,4 @@ Após resolver o problema do symlink:
 
 O `.gitignore` já tem `node_modules` ignorado, então está correto.
 
+

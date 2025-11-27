@@ -314,3 +314,4 @@ curl https://virtuousensemble.pt/__health
 
 **Nota:** Este processo manual é necessário porque o build no servidor falha por limitações de memória LVE. O build sempre deve ser feito localmente.
 
+

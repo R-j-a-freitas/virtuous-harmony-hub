@@ -40,16 +40,7 @@ const Gallery = () => {
             const target = e.target as HTMLImageElement;
             target.style.display = 'none';
           }} loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {image.title && <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white font-extralight text-base">
-                        {image.title}
-                      </h3>
-                      {image.description && <p className="text-white/80 text-sm mt-1 font-sans font-normal">
-                          {image.description}
-                        </p>}
-                    </div>}
-                </div>
+                {/* Títulos e descrições removidos conforme solicitado */}
               </div>)}
           </div>}
       </div>

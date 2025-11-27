@@ -1224,29 +1224,6 @@ const AdminPanel = () => {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="image-description">Descrição (opcional)</Label>
-                  <Textarea
-                    id="image-description"
-                    value={newGalleryImage.description}
-                    onChange={(e) => setNewGalleryImage({ ...newGalleryImage, description: e.target.value })}
-                    placeholder="Descrição da imagem..."
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="image-order">Ordem de Exibição</Label>
-                  <Input
-                    id="image-order"
-                    type="number"
-                    value={newGalleryImage.display_order}
-                    onChange={(e) => setNewGalleryImage({ ...newGalleryImage, display_order: parseInt(e.target.value) || 0 })}
-                    placeholder="0"
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Números menores aparecem primeiro
-                  </p>
-                </div>
-                <div>
                   <Label htmlFor="image-file">Selecionar Imagem</Label>
                   <Input
                     id="image-file"
@@ -1340,7 +1317,6 @@ const AdminPanel = () => {
                             </p>
                           )}
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>Ordem: {image.display_order}</span>
                             <Badge variant={image.is_visible ? "default" : "secondary"} className="text-xs">
                               {image.is_visible ? "Visível" : "Oculto"}
                             </Badge>

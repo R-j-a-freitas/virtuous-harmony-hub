@@ -20,7 +20,7 @@ const About = () => {
   return <section id="about" className="py-20 md:py-32 bg-card">
       <div className="container mx-auto px-4">
       <div className="text-center mb-16 animate-fade-in">
-        <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">Sobre os Virtuous Ensemble</h2>
+        <h2 className="font-serif text-4xl text-foreground mb-6 md:text-7xl">Sobre o Virtuous Ensemble</h2>
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto font-sans">Músicos profissionais dedicados a criar momentos inesquecíveis através de repertório diversificado, elegante e personalizado. Vasta experiência em eventos, cerimónias e momentos especiais, garantindo performances únicas e memoráveis</p>
       </div>
 

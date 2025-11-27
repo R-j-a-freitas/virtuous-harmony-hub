@@ -110,3 +110,4 @@ O `package.json` pode ter `"build": "vite build"`, mas isso é normal - o `.cpan
 
 **SEMPRE** faça build localmente e faça upload da pasta `dist/`.
 
+

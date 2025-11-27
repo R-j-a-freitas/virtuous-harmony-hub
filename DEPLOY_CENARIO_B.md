@@ -123,3 +123,4 @@ O Passenger será reiniciado automaticamente.
 - O Passenger reinicia automaticamente quando `tmp/restart.txt` é atualizado
 - O health check em `/__health` é necessário para o Node.js Selector funcionar corretamente
 
+

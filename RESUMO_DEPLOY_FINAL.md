@@ -159,3 +159,4 @@ curl https://virtuousensemble.pt/__health
 3. Verifique se o site funciona
 4. Se houver problemas, consulte os logs
 
+

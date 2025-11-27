@@ -94,3 +94,4 @@ Após resolver o conflito e fazer o "Update from Remote":
 
 **Nota:** O arquivo `package.json` que está no repositório Git é a versão correta e será restaurado após o "Update from Remote".
 
+

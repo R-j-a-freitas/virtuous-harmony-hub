@@ -69,3 +69,4 @@
 O build agora é feito **no servidor** durante o deploy (via `.cpanel.yml`). 
 Se o servidor tiver limitações de memória, pode fazer build localmente e commitar a pasta `dist/` temporariamente, ou usar o método manual descrito em `README_DEPLOY.md`.
 
+

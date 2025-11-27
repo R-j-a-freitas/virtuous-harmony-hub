@@ -143,3 +143,4 @@ Se você ainda não fez upload da `dist/`, o site não vai funcionar.
 - [ ] Passenger reiniciado (`touch tmp/restart.txt`)
 - [ ] Health check retorna `ok`
 
+

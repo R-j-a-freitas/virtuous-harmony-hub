@@ -267,3 +267,4 @@ tail -f /home/virtuou2/logs/passenger.log
 
 **Nota:** Todos os comandos devem ser executados no Terminal do cPanel ou via SSH.
 
+

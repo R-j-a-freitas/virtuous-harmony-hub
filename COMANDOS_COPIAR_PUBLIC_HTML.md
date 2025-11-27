@@ -156,3 +156,4 @@ ls -la dist/
 - [ ] `.htaccess` existe em `public_html`
 - [ ] Site carrega no navegador
 
+

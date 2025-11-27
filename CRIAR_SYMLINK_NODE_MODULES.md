@@ -157,3 +157,4 @@ O symlink deve apontar para:
 
 Se o caminho for diferente, ajuste o comando `ln -s` acima.
 
+
