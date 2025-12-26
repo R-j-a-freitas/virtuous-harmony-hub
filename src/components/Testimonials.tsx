@@ -81,28 +81,140 @@ const Testimonials = () => {
       // Sanitize inputs to prevent XSS
       const sanitizedName = name.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
       const sanitizedContent = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+      
+      // Insert testimonial into database
       const {
-        error
+        error: dbError
       } = await supabase.from("testimonials").insert({
         name: sanitizedName.trim(),
         content: sanitizedContent.trim(),
         rating,
         approved: false // Sempre começa como não aprovado
       });
-      if (error) {
-        console.error("Database error:", error);
+      
+      if (dbError) {
+        console.error("Database error:", dbError);
+        console.error("Error code:", dbError.code);
+        console.error("Error message:", dbError.message);
+        console.error("Error details:", dbError.details);
+        console.error("Error hint:", dbError.hint);
+        
+        // Mostrar mensagem de erro mais específica
+        let errorMessage = "Ocorreu um erro ao enviar o testemunho. Tente novamente.";
+        if (dbError.code === '42501' || dbError.message?.includes('permission') || dbError.message?.includes('policy')) {
+          errorMessage = "Erro de permissão. Verifique se a política RLS permite inserção pública de testemunhos.";
+        } else if (dbError.message) {
+          errorMessage = `Erro: ${dbError.message}`;
+        }
+        
         toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao enviar o testemunho. Tente novamente.",
+          title: "Erro ao Enviar",
+          description: errorMessage,
           variant: "destructive"
         });
         setIsSubmitting(false);
         return;
       }
+
+      // Send email notification
+      let emailSent = false;
+      let errorMessage = "";
+      try {
+        console.log("📧 Attempting to send testimonial email via edge function...");
+        console.log("📧 Function name: send-testimonial-email");
+        console.log("📧 Data being sent:", {
+          name: sanitizedName.trim(),
+          content: sanitizedContent.trim().substring(0, 50) + "...",
+          rating
+        });
+        
+        const {
+          data,
+          error: emailError
+        } = await supabase.functions.invoke("send-testimonial-email", {
+          body: {
+            name: sanitizedName.trim(),
+            content: sanitizedContent.trim(),
+            rating
+          }
+        });
+        
+        console.log("📧 Function response received:", {
+          data,
+          error: emailError,
+          hasData: !!data,
+          hasError: !!emailError
+        });
+        
+        if (emailError) {
+          console.error("❌ Supabase function error:", emailError);
+          console.error("❌ Error type:", typeof emailError);
+          console.error("❌ Error details:", JSON.stringify(emailError, null, 2));
+          
+          // Check for specific error types
+          if (emailError.message?.includes('not found') || emailError.message?.includes('404')) {
+            errorMessage = "Edge function 'send-testimonial-email' não encontrada. Verifique se está deployada no Supabase.";
+          } else if (emailError.message?.includes('CORS') || emailError.message?.includes('cors')) {
+            errorMessage = "Erro de CORS. A função não está retornando headers CORS corretos.";
+          } else if (emailError.message?.includes('Failed to send a request')) {
+            errorMessage = "Não foi possível conectar à edge function. Verifique se está deployada e acessível.";
+          } else {
+            errorMessage = emailError.message || emailError.toString() || JSON.stringify(emailError);
+          }
+          emailSent = false;
+        } else if (data) {
+          console.log("✅ Function response data:", data);
+          if (data.success === true || data.success === false) {
+            emailSent = data.success;
+            if (!data.success && data.error) {
+              errorMessage = data.error.message || data.error || "Erro ao enviar email";
+              console.error("❌ Email sending failed:", data.error);
+            } else {
+              console.log("✅ Email sent successfully according to response");
+            }
+          } else if (data.message || data.emailId) {
+            emailSent = true;
+            console.log("✅ Email sent successfully (message or emailId present)");
+          } else if (data.error) {
+            errorMessage = data.error.message || data.error || "Erro desconhecido";
+            emailSent = false;
+            console.error("❌ Error in response data:", data.error);
+          } else {
+            emailSent = !data.error;
+            console.log("⚠️ No explicit success, but no error either. Assuming success.");
+          }
+        } else {
+          console.log("⚠️ No data or error returned, assuming success");
+          emailSent = true;
+        }
+      } catch (err: any) {
+        console.error("❌ Exception calling edge function:", err);
+        console.error("❌ Error name:", err?.name);
+        console.error("❌ Error message:", err?.message);
+        console.error("❌ Error stack:", err?.stack);
+        console.error("❌ Full error:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
+        
+        // Check for specific error types
+        if (err?.message?.includes('not found') || err?.message?.includes('404')) {
+          errorMessage = "Edge function 'send-testimonial-email' não encontrada (404). Verifique se está deployada no Supabase.";
+        } else if (err?.message?.includes('CORS') || err?.message?.includes('cors')) {
+          errorMessage = "Erro de CORS. A função não está retornando headers CORS corretos.";
+        } else if (err?.message?.includes('Failed to send a request')) {
+          errorMessage = "Não foi possível conectar à edge function. Verifique se está deployada e acessível.";
+        } else {
+          errorMessage = err?.message || err?.toString() || "Erro desconhecido ao chamar o serviço de email";
+        }
+        emailSent = false;
+      }
+
+      // Show success message regardless of email status (testimonial was saved)
       toast({
         title: "Sucesso!",
-        description: "O seu testemunho foi enviado e será analisado em breve"
+        description: emailSent 
+          ? "O seu testemunho foi enviado e será analisado em breve. Receberá uma notificação por email."
+          : "O seu testemunho foi enviado e será analisado em breve."
       });
+      
       setName("");
       setContent("");
       setRating(5);
@@ -132,9 +244,78 @@ const Testimonials = () => {
         </Button>
       </div>
 
-      {isFormOpen && <div className="max-w-2xl mx-auto mb-16 bg-card border border-border rounded-lg p-8 animate-fade-in">
-...
-        </div>}
+      {isFormOpen && (
+        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto mb-16 bg-card border border-border rounded-lg p-8 animate-fade-in">
+          <h3 className="text-2xl font-serif text-foreground mb-6">Deixe o seu testemunho</h3>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-foreground mb-2 font-sans">Nome *</label>
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="O seu nome"
+                required
+                maxLength={100}
+                className={errors.name ? "border-red-500" : ""}
+                disabled={isSubmitting}
+              />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-foreground mb-2 font-sans">Avaliação *</label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    disabled={isSubmitting}
+                    className="focus:outline-none"
+                  >
+                    <Star
+                      className={`w-8 h-8 ${
+                        star <= rating
+                          ? "fill-primary text-primary"
+                          : "fill-none text-muted-foreground"
+                      } transition-colors`}
+                    />
+                  </button>
+                ))}
+              </div>
+              {errors.rating && <p className="text-red-500 text-sm mt-1">{errors.rating}</p>}
+            </div>
+
+            <div>
+              <label className="block text-foreground mb-2 font-sans">Testemunho *</label>
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Partilhe a sua experiência connosco..."
+                required
+                rows={6}
+                maxLength={1000}
+                className={errors.content ? "border-red-500" : ""}
+                disabled={isSubmitting}
+              />
+              {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content}</p>}
+              <p className="text-sm text-muted-foreground mt-1">
+                {content.length}/1000 caracteres
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isSubmitting ? "A enviar..." : "Enviar Testemunho"}
+            </Button>
+          </div>
+        </form>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {testimonials?.map((testimonial, index) => <div key={testimonial.id} className="bg-card border border-border rounded-lg p-6 hover:border-primary transition-all animate-fade-in" style={{
