@@ -1,0 +1,22 @@
+name: Keep DB Active
+
+on:
+  schedule:
+    # Executa todos os dias às 02:00 UTC (03:00 em Portugal no inverno, 04:00 no verão)
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Permite execução manual
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase Edge Function
+        run: |
+          curl -X POST \
+            'https://mhzhxwmxnofltgdmshcq.supabase.co/functions/v1/keep-db-active' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{}'
+        
+      - name: Show result
+        run: echo "✅ Keepalive executado com sucesso"
